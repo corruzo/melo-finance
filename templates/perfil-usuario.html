@@ -38,7 +38,14 @@
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }
+    
+        /* Prevención de parpadeo de modo oscuro */
+        :root {
+            --bg-light: #f5f6f8;
+            --bg-dark: #0f1623;
+        }
     </style>
+    <script src="/static/darkMode.js"></script>
 </head>
 
 <body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen">

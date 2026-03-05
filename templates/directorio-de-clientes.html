@@ -51,7 +51,14 @@
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }
+    
+        /* Prevención de parpadeo de modo oscuro */
+        :root {
+            --bg-light: #f5f6f8;
+            --bg-dark: #0f1623;
+        }
     </style>
+    <script src="/static/darkMode.js"></script>
 </head>
 
 <body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen">
@@ -128,7 +135,12 @@
                         class="absolute top-2 right-2 w-4 h-4 bg-red-500 rounded-full border border-white dark:border-slate-900 text-[10px] text-white font-bold flex items-center justify-center">{{
                         unread_count }}</span>
                     {% endif %}
-                </a>
+                </a>                <button type="button" onclick="toggleDarkMode()"
+                    class="flex size-10 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">
+                    <span class="material-symbols-outlined dark:hidden">dark_mode</span>
+                    <span class="material-symbols-outlined hidden dark:block">light_mode</span>
+                </button>
+
                 <a href="/settings/profile"
                     class="flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
                     <span class="material-symbols-outlined">person</span>
