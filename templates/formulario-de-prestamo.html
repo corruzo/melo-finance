@@ -94,7 +94,8 @@
     </div>
     <div
         class="relative flex min-h-screen w-full flex-col max-w-5xl mx-auto bg-white dark:bg-slate-900 md:shadow-2xl md:border-x border-slate-200 dark:border-slate-800">
-        <form method="POST" action="/loans/new" enctype="multipart/form-data" class="flex-1 flex flex-col">
+        <form method="POST" action="/loans/new" enctype="multipart/form-data" class="flex-1 flex flex-col"
+            onsubmit="return validateLoanForm()">
             <header
                 class="sticky top-0 z-50 flex items-center justify-between p-4 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-100 dark:border-slate-800">
                 <button type="button" onclick="toggleSidebar()"
@@ -173,7 +174,7 @@
                                 <input type="text" id="clientSearchInput" placeholder="Buscar cliente..."
                                     class="w-full h-12 pl-12 pr-10 rounded-xl bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20 transition-all font-medium"
                                     onfocus="showDropdown()" onkeyup="filterClientsSearch()" autocomplete="off">
-                                <input type="hidden" name="client_id" id="selectedClientId" required>
+                                <input type="hidden" name="client_id" id="selectedClientId">
                                 <input type="hidden" id="selectedClientPhone">
                                 <button type="button" onclick="toggleDropdown()"
                                     class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
@@ -491,9 +492,27 @@
                     let msg = "Error al procesar el préstamo.";
                     if (error === 'capital_usd') msg = "No tienes suficiente capital en USD.";
                     if (error === 'capital_ves') msg = "No tienes suficiente capital en VES.";
+                    if (error === 'missing_data') msg = "Faltan datos obligatorios.";
                     alert(msg);
                 }
             });
+
+            function validateLoanForm() {
+                const clientId = document.getElementById('selectedClientId').value;
+                const amountInput = document.getElementById('loanAmount').value.replace(',', '.');
+                const amount = parseFloat(amountInput) || 0;
+
+                if (!clientId) {
+                    alert("Por favor, selecciona un cliente de la lista antes de continuar.");
+                    document.getElementById('clientSearchInput').focus();
+                    return false;
+                }
+                if (amount <= 0) {
+                    alert("El monto del préstamo debe ser mayor a 0.");
+                    return false;
+                }
+                return true;
+            }
         </script>
         <script>
             // Set default dates
@@ -584,8 +603,9 @@
             }
 
             function calculateSummary() {
-                const amountRaw = parseFloat(document.getElementById('loanAmount').value) || 0;
-                const interestPercent = parseFloat(document.getElementById('loanInterest').value) || 0;
+                const amountInput = document.getElementById('loanAmount').value.replace(',', '.');
+                const amountRaw = parseFloat(amountInput) || 0;
+                const interestPercent = parseFloat(document.getElementById('loanInterest').value.replace(',', '.')) || 0;
                 const installments = parseInt(document.getElementById('loanInstallments').value) || 0;
                 const currency = document.querySelector('input[name="moneda"]:checked').value;
                 const freq = document.getElementById('loanFrequency').value;

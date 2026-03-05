@@ -17,7 +17,11 @@ from datetime import datetime, timedelta
 from sqlalchemy import func
 
 # --- Seguridad ---
-SECRET_KEY = os.environ.get("MELO_SECRET_KEY", "melo-finance-secret-key-change-in-production")
+_SECRET_KEY_FALLBACK = "melo-finance-secret-key-change-in-production"
+SECRET_KEY = os.environ.get("MELO_SECRET_KEY", _SECRET_KEY_FALLBACK)
+if SECRET_KEY == _SECRET_KEY_FALLBACK and os.environ.get("RAILWAY_ENVIRONMENT") == "production":
+    print("WARNING: Using default SECRET_KEY in production! Set MELO_SECRET_KEY for safety.")
+
 signer = URLSafeTimedSerializer(SECRET_KEY)
 
 def hash_password(password: str) -> str:
@@ -592,7 +596,9 @@ def new_loan_post(
     # 5. Manejar subida de archivos
     for upload_file in archivos:
         if upload_file.filename:
-            unique_filename = f"loan_{new_loan.id}_{datetime.now().timestamp()}_{upload_file.filename}"
+            # Sanitizar nombre de archivo
+            safe_name = os.path.basename(upload_file.filename).replace(" ", "_")
+            unique_filename = f"loan_{new_loan.id}_{int(datetime.now().timestamp())}_{safe_name}"
             file_path = os.path.join(UPLOAD_DIR, unique_filename)
             with open(file_path, "wb") as buffer:
                 shutil.copyfileobj(upload_file.file, buffer)
