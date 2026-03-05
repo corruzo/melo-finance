@@ -1,0 +1,30 @@
+{
+  "name": "Melo Finance",
+  "short_name": "Melo",
+  "description": "Gestión profesional de préstamos personales en USD y VES",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f1623",
+  "theme_color": "#043dae",
+  "lang": "es-VE",
+  "icons": [
+    {
+      "src": "/static/icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/static/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "categories": [
+    "finance",
+    "productivity"
+  ]
+}

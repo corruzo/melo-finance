@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport" />
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Melo Finance">
+    <meta name="theme-color" content="#043dae">
+    <title>Melo Finance - Clientes</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#043dae",
+                        "primary-light": "#eef2fb",
+                        "background-light": "#f5f6f8",
+                        "background-dark": "#0f1623",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#1a2436",
+                        "text-main": "#111318",
+                        "text-sub": "#5f6e8c",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.5rem", "lg": "1rem", "xl": "0.75rem", "2xl": "1.5rem", "full": "9999px" },
+                    boxShadow: {
+                        "soft": "0 4px 20px -2px rgba(4, 61, 174, 0.08)",
+                        "card": "0 2px 8px -1px rgba(0, 0, 0, 0.05)"
+                    }
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            overscroll-behavior-y: contain;
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen">
+    <!-- Sidebar Overlay -->
+    <div id="sidebar-overlay" onclick="toggleSidebar()"
+        class="fixed inset-0 bg-black/50 z-[90] hidden backdrop-blur-sm transition-opacity"></div>
+
+    <!-- Sidebar / Drawer -->
+    <div id="sidebar"
+        class="fixed top-0 left-0 bottom-0 w-64 bg-white dark:bg-slate-900 z-[100] -translate-x-full transition-transform duration-300 ease-in-out border-r border-slate-200 dark:border-slate-800 flex flex-col">
+        <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+            <h2 class="text-xl font-black text-primary italic">Melo <span
+                    class="text-slate-900 dark:text-white not-italic">Finance</span></h2>
+            <button onclick="toggleSidebar()" class="text-slate-400 hover:text-slate-900 dark:hover:text-white">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <nav class="flex-1 p-4 space-y-2">
+            <a href="/dashboard"
+                class="flex items-center gap-3 p-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                <span class="material-symbols-outlined">dashboard</span> Dashboard
+            </a>
+            <a href="/clients" class="flex items-center gap-3 p-3 rounded-xl bg-primary/5 text-primary font-bold">
+                <span class="material-symbols-outlined">group</span> Clientes
+            </a>
+            <a href="/loans"
+                class="flex items-center gap-3 p-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                <span class="material-symbols-outlined">account_balance_wallet</span> Centro de Préstamos
+            </a>
+            <a href="/history/loans"
+                class="flex items-center gap-3 p-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                <span class="material-symbols-outlined">history</span> Historial Préstamos
+            </a>
+            <a href="/history/movements"
+                class="flex items-center gap-3 p-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                <span class="material-symbols-outlined">receipt_long</span> Movimientos
+            </a>
+            <a href="/settings/profile"
+                class="flex items-center gap-3 p-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                <span class="material-symbols-outlined">settings</span> Ajustes
+            </a>
+        </nav>
+        <div class="p-4 border-t border-slate-100 dark:border-slate-800">
+            <a href="/logout"
+                class="flex items-center gap-3 p-3 rounded-xl text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors font-bold">
+                <span class="material-symbols-outlined">logout</span> Cerrar Sesión
+            </a>
+        </div>
+    </div>
+    <div
+        class="relative flex min-h-screen w-full flex-col max-w-5xl mx-auto bg-surface-light dark:bg-surface-dark overflow-x-hidden md:shadow-2xl md:border-x border-slate-200 dark:border-white/5">
+        <!-- Header Section -->
+        <header
+            class="flex items-center justify-between p-4 sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-100 dark:border-slate-800">
+            <button onclick="toggleSidebar()"
+                class="text-slate-900 dark:text-slate-100 flex size-10 shrink-0 items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
+                <span class="material-symbols-outlined">menu</span>
+            </button>
+            <div class="flex-1 flex flex-col items-center">
+                <h2
+                    class="text-primary italic font-black text-2xl md:text-3xl tracking-tight leading-none pointer-events-none">
+                    Melo
+                    <span class="text-slate-900 dark:text-white not-italic">Finance</span>
+                </h2>
+                <p class="text-[10px] md:text-sm text-slate-400 uppercase font-black tracking-[0.2em] mt-1">Directorio
+                    de Clientes</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <a href="/notifications"
+                    class="flex size-10 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-primary transition-colors relative">
+                    <span class="material-symbols-outlined">notifications</span>
+                    {% if unread_count > 0 %}
+                    <span
+                        class="absolute top-2 right-2 w-4 h-4 bg-red-500 rounded-full border border-white dark:border-slate-900 text-[10px] text-white font-bold flex items-center justify-center">{{
+                        unread_count }}</span>
+                    {% endif %}
+                </a>
+                <a href="/settings/profile"
+                    class="flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
+                    <span class="material-symbols-outlined">person</span>
+                </a>
+            </div>
+        </header>
+
+        <div class="px-5 pt-4">
+            <!-- Search Bar -->
+            <div class="relative group">
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <span class="material-symbols-outlined text-text-sub dark:text-gray-400">search</span>
+                </div>
+                <input id="clientSearch"
+                    class="block w-full pl-11 pr-4 py-3.5 bg-background-light dark:bg-black/20 border-none rounded-xl text-text-main dark:text-white placeholder-text-sub dark:placeholder-gray-500 focus:ring-2 focus:ring-primary/20 transition-all shadow-inner"
+                    placeholder="Buscar por nombre o ID..." type="text" onkeyup="filterClients()" />
+                <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                    <button
+                        class="p-1.5 rounded-lg text-text-sub hover:bg-white dark:hover:bg-white/10 hover:shadow-sm transition-all">
+                        <span class="material-symbols-outlined text-[20px]">tune</span>
+                    </button>
+                </div>
+            </div>
+            <!-- Filter Pills -->
+            <div class="flex gap-3 mt-4 overflow-x-auto scrollbar-hide pb-1">
+                <button onclick="setFilter('all')"
+                    class="filter-pill whitespace-nowrap px-4 py-1.5 bg-primary text-white rounded-full text-sm font-semibold shadow-soft"
+                    data-filter="all">Todos</button>
+                <button onclick="setFilter('clean')"
+                    class="filter-pill whitespace-nowrap px-4 py-1.5 bg-white dark:bg-white/5 text-text-sub dark:text-gray-300 border border-primary/10 dark:border-white/10 rounded-full text-sm font-medium hover:bg-primary/5 transition-colors"
+                    data-filter="clean">Al día</button>
+                <button onclick="setFilter('debt')"
+                    class="filter-pill whitespace-nowrap px-4 py-1.5 bg-white dark:bg-white/5 text-text-sub dark:text-gray-300 border border-primary/10 dark:border-white/10 rounded-full text-sm font-medium hover:bg-primary/5 transition-colors"
+                    data-filter="debt">Con deuda</button>
+                <button onclick="setFilter('atraso')"
+                    class="filter-pill whitespace-nowrap px-4 py-1.5 bg-white dark:bg-white/5 text-text-sub dark:text-gray-300 border border-primary/10 dark:border-white/10 rounded-full text-sm font-medium hover:bg-primary/5 transition-colors"
+                    data-filter="atraso">Atrasados</button>
+            </div>
+        </div>
+        <!-- Main Content List -->
+        <main class="flex-1 px-5 py-6 space-y-4 md:space-y-6 pb-28 md:pb-12">
+            <div class="flex justify-between items-end mb-4 px-1">
+                <h2 class="text-lg md:text-xl font-black text-slate-900 dark:text-white uppercase tracking-widest">
+                    Recientes</h2>
+                <span class="text-sm font-bold text-primary cursor-pointer hover:underline">Ver todo</span>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {% for client in clients %}
+                <!-- Client Card -->
+                <div onclick="window.location.href='/clients/{{ client.id }}'"
+                    class="client-card group bg-surface-light dark:bg-surface-dark rounded-xl p-4 shadow-card hover:shadow-soft transition-all duration-300 border border-transparent hover:border-primary/10 cursor-pointer flex items-center justify-between"
+                    data-name="{{ client.nombre.lower() }}" data-debt="{{ 'yes' if client.deuda > 0 else 'no' }}"
+                    data-atraso="{{ 'yes' if client.tiene_atraso else 'no' }}">
+                    <div class="flex items-center gap-4">
+                        <div class="relative">
+                            <div
+                                class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center ring-2 ring-white dark:ring-surface-dark shadow-sm">
+                                <span class="text-primary font-bold text-lg">{{ client.nombre[0].upper() }}</span>
+                            </div>
+                            {% if client.tiene_atraso %}
+                            <div
+                                class="absolute bottom-0 right-0 w-3 h-3 bg-red-500 border-2 border-white dark:border-surface-dark rounded-full">
+                            </div>
+                            {% elif client.deuda == 0 %}
+                            <div
+                                class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-surface-dark rounded-full">
+                            </div>
+                            {% else %}
+                            <div
+                                class="absolute bottom-0 right-0 w-3 h-3 bg-amber-500 border-2 border-white dark:border-surface-dark rounded-full">
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <h3
+                                class="text-base font-bold {% if client.tiene_atraso %}text-red-500{% else %}text-text-main dark:text-white{% endif %} group-hover:text-primary transition-colors">
+                                {{ client.nombre }}</h3>
+                            <div class="flex items-center gap-1 text-xs text-text-sub dark:text-gray-400 mt-0.5">
+                                {% if client.tiene_atraso %}
+                                <span class="material-symbols-outlined text-[14px] text-red-500">error</span>
+                                <span class="text-red-500 font-medium">Pago Atrasado</span>
+                                {% else %}
+                                <span class="material-symbols-outlined text-[14px]">schedule</span>
+                                <span>En regla</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1">Deuda</p>
+                        <p
+                            class="text-base font-black {% if client.tiene_atraso %}text-red-500{% elif client.deuda == 0 %}text-emerald-500{% else %}text-slate-900 dark:text-white{% endif %}">
+                            ${{ client.deuda|format_currency }}</p>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <!-- Mensaje sin clientes -->
+            <div
+                class="col-span-full text-center p-12 bg-gray-50 dark:bg-white/5 rounded-2xl border border-dashed border-gray-200 dark:border-white/10 m-4">
+                <span class="material-symbols-outlined text-4xl text-gray-300 dark:text-gray-600 mb-2">person_off</span>
+                <p class="text-text-sub dark:text-gray-400 font-medium">No hay clientes registrados.</p>
+            </div>
+            {% endfor %}
+            <!-- Add Button -->
+            <a href="/clients/new"
+                class="fixed bottom-24 right-5 w-14 h-14 bg-primary text-white rounded-full shadow-lg shadow-primary/30 flex items-center justify-center hover:scale-105 active:scale-95 transition-transform z-10">
+                <span class="material-symbols-outlined text-3xl">add</span>
+            </a>
+        </main>
+
+        <div class="h-28"></div>
+
+        <!-- Bottom Navigation Bar -->
+        <div
+            class="fixed bottom-0 md:bottom-6 left-0 right-0 flex max-w-md md:max-w-3xl lg:max-w-5xl mx-auto gap-2 border-t md:border border-slate-200 dark:border-slate-700 md:rounded-3xl md:shadow-2xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-4 pb-6 pt-2 md:py-2 z-50 transition-all">
+            <a class="flex flex-1 md:flex-row flex-col items-center justify-center gap-2 md:gap-3 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors md:hover:bg-primary/5 md:py-3 md:rounded-xl"
+                href="/dashboard">
+                <span class="material-symbols-outlined">dashboard</span>
+                <p class="text-[10px] md:text-sm font-medium leading-normal tracking-tight">Dashboard</p>
+            </a>
+            <a class="flex flex-1 md:flex-row flex-col items-center justify-center gap-2 md:gap-3 text-primary md:hover:bg-primary/5 md:py-3 md:rounded-xl transition-colors"
+                href="/clients">
+                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">group</span>
+                <p class="text-[10px] md:text-sm font-bold leading-normal tracking-tight">Clientes</p>
+            </a>
+            <a class="flex flex-1 md:flex-row flex-col items-center justify-center gap-2 md:gap-3 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors md:hover:bg-primary/5 md:py-3 md:rounded-xl"
+                href="/loans">
+                <span class="material-symbols-outlined">account_balance_wallet</span>
+                <p class="text-[10px] md:text-sm font-medium leading-normal tracking-tight">Préstamos</p>
+            </a>
+            <a class="flex flex-1 md:flex-row flex-col items-center justify-center gap-2 md:gap-3 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors md:hover:bg-primary/5 md:py-3 md:rounded-xl"
+                href="/settings/profile">
+                <span class="material-symbols-outlined">settings</span>
+                <p class="text-[10px] md:text-sm font-medium leading-normal tracking-tight">Ajustes</p>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
+
+        let currentFilter = 'all';
+
+        function setFilter(filter) {
+            currentFilter = filter;
+            document.querySelectorAll('.filter-pill').forEach(btn => {
+                if (btn.dataset.filter === filter) {
+                    btn.classList.add('bg-primary', 'text-white');
+                    btn.classList.remove('bg-white', 'dark:bg-white/5', 'text-text-sub', 'dark:text-gray-300');
+                } else {
+                    btn.classList.remove('bg-primary', 'text-white');
+                    btn.classList.add('bg-white', 'dark:bg-white/5', 'text-text-sub', 'dark:text-gray-300');
+                }
+            });
+            filterClients();
+        }
+
+        function filterClients() {
+            const query = document.getElementById('clientSearch').value.toLowerCase();
+            const cards = document.querySelectorAll('.client-card');
+
+            cards.forEach(card => {
+                const name = card.dataset.name;
+                const hasDebt = card.dataset.debt === 'yes';
+                const hasAtraso = card.dataset.atraso === 'yes';
+
+                let matchesFilter = true;
+                if (currentFilter === 'clean') matchesFilter = !hasDebt && !hasAtraso;
+                if (currentFilter === 'debt') matchesFilter = hasDebt;
+                if (currentFilter === 'atraso') matchesFilter = hasAtraso;
+
+                const matchesQuery = name.includes(query);
+
+                if (matchesFilter && matchesQuery) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport" />
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Melo Finance">
+    <meta name="theme-color" content="#043dae">
+    <title>Melo Finance - Nuevo Préstamo</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#043dae",
+                        "background-light": "#f5f6f8",
+                        "background-dark": "#0f1623",
+                    },
+                    fontFamily: {
+                        "display": ["Outfit", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            overscroll-behavior-y: contain;
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen">
+    <!-- Sidebar Overlay -->
+    <div id="sidebar-overlay" onclick="toggleSidebar()"
+        class="fixed inset-0 bg-black/50 z-[90] hidden backdrop-blur-sm transition-opacity"></div>
+
+    <!-- Sidebar / Drawer -->
+    <div id="sidebar"
+        class="fixed top-0 left-0 bottom-0 w-64 bg-white dark:bg-slate-900 z-[100] -translate-x-full transition-transform duration-300 ease-in-out border-r border-slate-200 dark:border-slate-800 flex flex-col">
+        <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+            <h2 class="text-xl font-black text-primary italic">Melo <span
+                    class="text-slate-900 dark:text-white not-italic">Finance</span></h2>
+            <button onclick="toggleSidebar()" class="text-slate-400 hover:text-slate-900 dark:hover:text-white">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <nav class="flex-1 p-4 space-y-2">
+            <a href="/dashboard"
+                class="flex items-center gap-3 p-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                <span class="material-symbols-outlined">dashboard</span> Dashboard
+            </a>
+            <a href="/clients"
+                class="flex items-center gap-3 p-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                <span class="material-symbols-outlined">group</span> Clientes
+            </a>
+            <a href="/loans" class="flex items-center gap-3 p-3 rounded-xl bg-primary/5 text-primary font-bold">
+                <span class="material-symbols-outlined">account_balance_wallet</span> Centro de Préstamos
+            </a>
+            <a href="/history/loans"
+                class="flex items-center gap-3 p-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                <span class="material-symbols-outlined">history</span> Historial Préstamos
+            </a>
+            <a href="/history/movements"
+                class="flex items-center gap-3 p-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                <span class="material-symbols-outlined">receipt_long</span> Movimientos
+            </a>
+            <a href="/settings/profile"
+                class="flex items-center gap-3 p-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                <span class="material-symbols-outlined">settings</span> Ajustes
+            </a>
+        </nav>
+        <div class="p-4 border-t border-slate-100 dark:border-slate-800">
+            <a href="/logout"
+                class="flex items-center gap-3 p-3 rounded-xl text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors font-bold">
+                <span class="material-symbols-outlined">logout</span> Cerrar Sesión
+            </a>
+        </div>
+    </div>
+    <div
+        class="relative flex min-h-screen w-full flex-col max-w-5xl mx-auto bg-white dark:bg-slate-900 md:shadow-2xl md:border-x border-slate-200 dark:border-slate-800">
+        <form method="POST" action="/loans/new" enctype="multipart/form-data" class="flex-1 flex flex-col">
+            <header
+                class="sticky top-0 z-50 flex items-center justify-between p-4 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-100 dark:border-slate-800">
+                <button type="button" onclick="toggleSidebar()"
+                    class="text-slate-900 dark:text-slate-100 flex size-10 shrink-0 items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
+                    <span class="material-symbols-outlined">menu</span>
+                </button>
+                <div class="flex-1 flex flex-col items-center">
+                    <h2
+                        class="text-primary italic font-black text-2xl md:text-3xl tracking-tight leading-none pointer-events-none">
+                        Melo
+                        <span class="text-slate-900 dark:text-white not-italic">Finance</span>
+                    </h2>
+                    <p class="text-[10px] md:text-sm text-slate-400 uppercase font-black tracking-[0.2em] mt-1">Nuevo
+                        Préstamo</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <a href="/notifications"
+                        class="flex size-10 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-primary transition-colors relative">
+                        <span class="material-symbols-outlined">notifications</span>
+                        {% if unread_count > 0 %}
+                        <span
+                            class="absolute top-2 right-2 w-4 h-4 bg-red-500 rounded-full border border-white dark:border-slate-900 text-[10px] text-white font-bold flex items-center justify-center">{{
+                            unread_count }}</span>
+                        {% endif %}
+                    </a>
+                    <a href="/settings/profile"
+                        class="flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
+                        <span class="material-symbols-outlined">person</span>
+                    </a>
+                </div>
+            </header>
+            <!-- Main Content Area -->
+            <main class="flex-1 flex flex-col md:flex-row gap-6 md:gap-8 p-4 md:p-8 overflow-y-auto">
+                <!-- Left Column: Form Fields -->
+                <div class="flex-1 space-y-6 md:space-y-8 max-w-2xl mx-auto md:mx-0 w-full">
+                    <!-- 1. Moneda -->
+                    <div class="space-y-2">
+                        <div class="flex p-1 bg-slate-200 dark:bg-slate-800 rounded-xl">
+                            <label class="flex-1 relative cursor-pointer">
+                                <input checked="" class="peer sr-only" name="moneda" type="radio" value="USD" />
+                                <div
+                                    class="py-2.5 text-center text-sm font-semibold rounded-lg text-slate-500 dark:text-slate-400 peer-checked:bg-white dark:peer-checked:bg-slate-700 peer-checked:text-slate-900 dark:peer-checked:text-white peer-checked:shadow-sm transition-all duration-200">
+                                    USD
+                                </div>
+                            </label>
+                            <label class="flex-1 relative cursor-pointer">
+                                <input class="peer sr-only" name="moneda" type="radio" value="VES" />
+                                <div
+                                    class="py-2.5 text-center text-sm font-semibold rounded-lg text-slate-500 dark:text-slate-400 peer-checked:bg-white dark:peer-checked:bg-slate-700 peer-checked:text-slate-900 dark:peer-checked:text-white peer-checked:shadow-sm transition-all duration-200">
+                                    VES
+                                </div>
+                            </label>
+                        </div>
+                        <p class="text-xs text-center text-slate-500 dark:text-slate-400 mt-2">
+                            Tasa de cambio actual: <span class="font-medium text-slate-700 dark:text-slate-300">1 USD =
+                                {{
+                                "%.2f"|format(tasa_actual) }} VES</span>
+                        </p>
+                    </div>
+
+                    <!-- 2. Cliente -->
+                    <div
+                        class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-800">
+                        <div class="flex items-center justify-between mb-2">
+                            <label
+                                class="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide">Cliente</label>
+                            <button type="button" onclick="openQuickClientModal()"
+                                class="flex items-center gap-1 text-[10px] font-bold text-primary uppercase hover:opacity-80 transition-opacity">
+                                <span class="material-symbols-outlined text-sm">person_add</span> Nuevo
+                            </button>
+                        </div>
+                        <div class="relative" id="clientSelectorContainer">
+                            <div class="relative group">
+                                <span
+                                    class="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-400">search</span>
+                                <input type="text" id="clientSearchInput" placeholder="Buscar cliente..."
+                                    class="w-full h-12 pl-12 pr-10 rounded-xl bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20 transition-all font-medium"
+                                    onfocus="showDropdown()" onkeyup="filterClientsSearch()" autocomplete="off">
+                                <input type="hidden" name="client_id" id="selectedClientId" required>
+                                <input type="hidden" id="selectedClientPhone">
+                                <button type="button" onclick="toggleDropdown()"
+                                    class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
+                                    <span class="material-symbols-outlined" id="dropdownIcon">expand_more</span>
+                                </button>
+                            </div>
+                            <!-- Custom Dropdown -->
+                            <div id="clientDropdown"
+                                class="hidden absolute left-0 right-0 mt-2 max-h-60 overflow-y-auto bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700 z-50">
+                                {% for client in clients %}
+                                <div class="client-option px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer flex items-center gap-3 transition-colors"
+                                    data-id="{{ client.id }}" data-name="{{ client.nombre.lower() }}"
+                                    data-phone="{{ client.telefono }}"
+                                    onclick="selectClient('{{ client.id }}', '{{ client.nombre }}', '{{ client.telefono }}')">
+                                    <div
+                                        class="size-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">
+                                        {{ client.nombre[0].upper() }}
+                                    </div>
+                                    <span class="font-bold text-slate-700 dark:text-slate-200">{{ client.nombre
+                                        }}</span>
+                                </div>
+                                {% else %}
+                                <div class="px-4 py-8 text-center text-slate-400 text-sm italic">
+                                    No hay clientes registrados
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. Monto -->
+                    <div
+                        class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-800">
+                        <label
+                            class="block mb-2 text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide">Monto
+                            del Préstamo</label>
+                        <div class="relative flex items-center">
+                            <span id="amountCurrencySymbol"
+                                class="absolute left-0 text-3xl font-bold text-slate-400 dark:text-slate-600">$</span>
+                            <input name="monto_principal" id="loanAmount"
+                                class="w-full bg-transparent border-none p-0 pl-8 text-4xl font-bold text-slate-900 dark:text-white placeholder-slate-300 dark:placeholder-slate-700 focus:ring-0"
+                                placeholder="0.00" type="number" step="0.01" value="" required
+                                oninput="calculateSummary()" inputmode="decimal" />
+                        </div>
+                    </div>
+
+                    <!-- 4. % Interés, 5. Frecuencia, 6. Fecha Inicio, 7. Fecha Fin, 8. Cuotas (Visual Only), Notes, Summary Card -->
+                    <div
+                        class="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-800 space-y-5">
+                        <!-- Interest & Frequency Grid -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="space-y-1.5">
+                                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">% de
+                                    Interés</label>
+                                <div class="relative">
+                                    <input name="porcentaje_interes" id="loanInterest"
+                                        class="w-full h-12 px-4 rounded-xl bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:border-primary focus:ring-primary dark:focus:ring-primary/50 text-base font-medium transition-shadow"
+                                        placeholder="0%" type="number" step="0.1" value="5" required
+                                        oninput="calculateSummary()" inputmode="decimal" />
+                                    <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+                                        <span class="text-slate-400 dark:text-slate-500 font-bold">%</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="space-y-1.5">
+                                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Frecuencia
+                                    de
+                                    Pago</label>
+                                <div class="relative">
+                                    <select name="frecuencia" id="loanFrequency" onchange="calculateInstallments()"
+                                        class="w-full h-12 px-4 pr-8 rounded-xl bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:border-primary focus:ring-primary dark:focus:ring-primary/50 text-base font-medium appearance-none transition-shadow cursor-pointer">
+                                        <option value="mensual">Mensual</option>
+                                        <option value="quincenal">Quincenal</option>
+                                        <option value="semanal">Semanal</option>
+                                        <option value="diario">Diario</option>
+                                    </select>
+                                    <div
+                                        class="absolute inset-y-0 right-3 flex items-center pointer-events-none text-slate-500">
+                                        <span class="material-symbols-outlined text-xl">expand_more</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Start Date & End Date -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="space-y-1.5">
+                                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Fecha de
+                                    Inicio</label>
+                                <div class="relative">
+                                    <input name="fecha_inicio" id="launchDate"
+                                        class="w-full h-12 px-4 rounded-xl bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:border-primary focus:ring-primary dark:focus:ring-primary/50 text-base font-medium transition-shadow"
+                                        type="date" onchange="calculateInstallments()" />
+                                </div>
+                            </div>
+                            <div class="space-y-1.5">
+                                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Fecha de
+                                    Fin</label>
+                                <div class="relative">
+                                    <input name="fecha_fin" id="endDate"
+                                        class="w-full h-12 px-4 rounded-xl bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:border-primary focus:ring-primary dark:focus:ring-primary/50 text-base font-medium transition-shadow"
+                                        type="date" onchange="calculateInstallments()" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 8. Cuotas (Visual & Editable) -->
+                        <div class="space-y-3">
+                            <div
+                                class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
+                                <div class="flex items-center justify-between mb-2">
+                                    <div>
+                                        <p
+                                            class="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">
+                                            Cuotas Calculadas</p>
+                                        <p class="text-2xl font-black text-slate-900 dark:text-white"
+                                            id="displayCuotas">0
+                                        </p>
+                                    </div>
+                                    <button type="button" onclick="toggleManualCuotas()"
+                                        class="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary rounded-lg text-[10px] font-bold uppercase transition-all hover:bg-primary/20">
+                                        <span class="material-symbols-outlined text-sm">edit</span> Editar
+                                    </button>
+                                </div>
+                                <div
+                                    class="flex items-start gap-2 pt-2 border-t border-slate-200/50 dark:border-slate-700/50">
+                                    <span class="material-symbols-outlined text-slate-400 text-sm">info</span>
+                                    <p class="text-[9px] font-medium text-slate-500 leading-tight">
+                                        Las cuotas se calculan dividiendo los días totales entre la frecuencia (Mensual:
+                                        30.4d,
+                                        Quincenal: 15d, Semanal: 7d, Diario: 1d).
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Manual Input (Hidden by default) -->
+                            <div id="manualCuotasContainer" class="hidden animate-in slide-in-from-top-2 duration-300">
+                                <label
+                                    class="block text-[10px] font-bold text-primary uppercase tracking-widest ml-1 mb-1.5">Ajuste
+                                    Manual de Cuotas</label>
+                                <input type="number" name="cuotas" id="loanInstallments" value="0" min="1"
+                                    class="w-full h-12 px-4 rounded-xl bg-primary/5 border-2 border-primary/20 text-primary focus:ring-primary focus:border-primary font-black text-lg"
+                                    oninput="manualCuotasChanged()" inputmode="numeric">
+                            </div>
+                        </div>
+
+                        <!-- Multimedia Upload -->
+                        <div class="space-y-1.5">
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Respaldo
+                                Multimedia</label>
+                            <div class="relative group">
+                                <input type="file" name="archivos" multiple accept="image/*,video/*,application/pdf"
+                                    class="hidden" id="multimediaInput" onchange="updateFileCount()">
+                                <label for="multimediaInput"
+                                    class="flex items-center justify-center gap-3 w-full h-14 rounded-xl bg-slate-50 dark:bg-slate-800 border-2 border-dashed border-slate-200 dark:border-slate-700 text-slate-400 font-bold hover:border-primary hover:text-primary hover:bg-primary/5 transition-all cursor-pointer">
+                                    <span class="material-symbols-outlined">perm_media</span>
+                                    <span id="fileCountText" class="text-sm">Adjuntar fotos o documentos</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Notes -->
+                        <div class="space-y-1.5 pb-20">
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Notas
+                                adicionales</label>
+                            <textarea name="notas" rows="3"
+                                class="w-full p-4 rounded-xl bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:border-primary focus:ring-primary dark:focus:ring-primary/50 text-base font-medium transition-shadow resize-none"
+                                placeholder="Propósito del préstamo..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Summary Card (Sticky) -->
+                    <div class="md:w-[400px] w-full">
+                        <div class="sticky top-0 space-y-6">
+                            <div id="summaryCard"
+                                class="p-6 md:p-8 rounded-[2rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-2xl space-y-6 border-t-8 border-t-primary">
+                                <div>
+                                    <h3 class="text-sm font-black text-slate-400 uppercase tracking-widest mb-4">Resumen
+                                        de Cotización</h3>
+                                    <div class="space-y-4">
+                                        <div class="flex justify-between items-center">
+                                            <span
+                                                class="text-xs font-bold text-slate-400 uppercase tracking-wider">Monto
+                                                Base</span>
+                                            <span class="font-black text-lg text-slate-900 dark:text-white"
+                                                id="summaryBase">$0.00</span>
+                                        </div>
+                                        <div
+                                            class="flex justify-between items-center text-slate-500 dark:text-slate-400">
+                                            <span
+                                                class="text-xs font-bold text-slate-400 uppercase tracking-wider">Intereses
+                                                Totales</span>
+                                            <span class="font-bold text-slate-700 dark:text-slate-200"
+                                                id="summaryInterest">$0.00</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="h-px bg-slate-100 dark:bg-slate-800 w-full"></div>
+
+                                <div class="space-y-4">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm font-black text-slate-900 dark:text-white">Total a
+                                            pagar</span>
+                                        <span class="text-3xl font-black text-primary" id="summaryTotal">$0.00</span>
+                                    </div>
+                                    <div class="flex justify-between items-center pt-1">
+                                        <span
+                                            class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">
+                                            Cuota estimada <span id="summaryFreqText"></span>
+                                        </span>
+                                        <span class="text-xl font-black text-slate-900 dark:text-white"
+                                            id="summaryInstallment">$0.00</span>
+                                    </div>
+                                </div>
+
+                                <!-- WhatsApp Sharing -->
+                                <div class="pt-2">
+                                    <button type="button" onclick="shareOnWhatsApp()" id="shareBtn"
+                                        class="w-full py-4 bg-[#25D366] text-white rounded-2xl flex items-center justify-center gap-3 font-black text-sm uppercase hover:bg-[#1eb855] shadow-lg shadow-[#25D366]/30 transition-all opacity-50 cursor-not-allowed group"
+                                        disabled>
+                                        <svg class="w-5 h-5 fill-current group-hover:scale-110 transition-transform"
+                                            viewBox="0 0 24 24">
+                                            <path
+                                                d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.72 1.011 3.734 1.488 5.71 1.489h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                                        </svg>
+                                        Compartir Cotización
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Secondary Alert (Capital) -->
+                            <div id="capitalWarning"
+                                class="hidden p-4 bg-red-500/10 border border-red-500/20 text-red-600 rounded-2xl flex items-center gap-3">
+                                <span class="material-symbols-outlined shrink-0">warning</span>
+                                <p class="text-xs font-black uppercase tracking-wider leading-tight"
+                                    id="capitalWarningText"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <!-- Quick Client Modal -->
+            <div id="quickClientModal" class="fixed inset-0 z-[60] hidden flex items-center justify-center">
+                <!-- Backdrop -->
+                <div class="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
+                    onclick="closeQuickClientModal()"></div>
+                <!-- Modal Content -->
+                <div class="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-2xl mx-4">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xl font-bold text-slate-900 dark:text-white">Registro Rápido</h3>
+                        <button type="button" onclick="closeQuickClientModal()"
+                            class="text-slate-400 hover:text-red-500 transition-colors">
+                            <span class="material-symbols-outlined">close</span>
+                        </button>
+                    </div>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Nombre
+                                Completo <span class="text-red-500">*</span></label>
+                            <input type="text" id="qcNombre"
+                                class="w-full h-12 px-4 rounded-xl bg-slate-50 dark:bg-slate-800 border-none focus:ring-2 focus:ring-primary text-slate-900 dark:text-white shadow-sm"
+                                placeholder="Ej. Juan Pérez">
+                        </div>
+                        <div>
+                            <label
+                                class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Cédula</label>
+                            <input type="text" id="qcCedula"
+                                class="w-full h-12 px-4 rounded-xl bg-slate-50 dark:bg-slate-800 border-none focus:ring-2 focus:ring-primary text-slate-900 dark:text-white shadow-sm"
+                                placeholder="Opcional" inputmode="numeric">
+                        </div>
+                        <div>
+                            <label
+                                class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Teléfono</label>
+                            <input type="tel" id="qcTelefono"
+                                class="w-full h-12 px-4 rounded-xl bg-slate-50 dark:bg-slate-800 border-none focus:ring-2 focus:ring-primary text-slate-900 dark:text-white shadow-sm"
+                                placeholder="Opcional" inputmode="tel">
+                        </div>
+                        <button type="button" id="qcSubmitBtn" onclick="submitQuickClient()"
+                            class="w-full h-12 bg-primary text-white font-bold rounded-xl flex items-center justify-center gap-2 hover:bg-primary/90 transition-colors mt-2">
+                            <span class="material-symbols-outlined text-sm">person_add</span> Añadir Cliente
+                        </button>
+                        <p id="qcError" class="text-red-500 text-xs text-center hidden font-bold"></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="h-32"></div>
+            <!-- Bottom Action Bar (Fixed on Mobile, part of flow maybe?) -->
+            <div
+                class="sticky bottom-0 md:bg-transparent z-40 p-4 bg-white/90 dark:bg-background-dark/95 backdrop-blur-xl border-t md:border-t-0 border-slate-200 dark:border-slate-800 mt-auto md:max-w-xs md:ml-auto md:mr-8 md:mb-8">
+                <div class="flex flex-col gap-3 w-full">
+                    <button type="submit" id="submitBtn"
+                        class="w-full h-16 bg-primary hover:bg-primary/90 text-white font-black text-lg rounded-2xl shadow-2xl shadow-primary/30 flex items-center justify-center gap-3 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-widest">
+                        <span class="material-symbols-outlined text-2xl">rocket_launch</span>
+                        <span id="submitBtnText">Otorgar Préstamo</span>
+                    </button>
+                </div>
+            </div>
+        </form>
+
+        <!-- Bottom Navigation Bar -->
+        <div
+            class="fixed bottom-0 md:bottom-6 left-0 right-0 flex max-w-md md:max-w-3xl lg:max-w-5xl mx-auto gap-2 border-t md:border border-slate-200 dark:border-slate-700 md:rounded-3xl md:shadow-2xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-4 pb-6 pt-2 md:py-2 z-50 transition-all">
+            <a class="flex flex-1 md:flex-row flex-col items-center justify-center gap-2 md:gap-3 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors md:hover:bg-primary/5 md:py-3 md:rounded-xl"
+                href="/dashboard">
+                <span class="material-symbols-outlined">dashboard</span>
+                <p class="text-[10px] md:text-sm font-medium leading-normal tracking-tight">Dashboard</p>
+            </a>
+            <a class="flex flex-1 md:flex-row flex-col items-center justify-center gap-2 md:gap-3 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors md:hover:bg-primary/5 md:py-3 md:rounded-xl"
+                href="/clients">
+                <span class="material-symbols-outlined">group</span>
+                <p class="text-[10px] md:text-sm font-medium leading-normal tracking-tight">Clientes</p>
+            </a>
+            <a class="flex flex-1 md:flex-row flex-col items-center justify-center gap-2 md:gap-3 text-primary md:hover:bg-primary/5 md:py-3 md:rounded-xl transition-colors"
+                href="/loans">
+                <span class="material-symbols-outlined"
+                    style="font-variation-settings: 'FILL' 1;">account_balance_wallet</span>
+                <p class="text-[10px] md:text-sm font-bold leading-normal tracking-tight">Préstamos</p>
+            </a>
+            <a class="flex flex-1 md:flex-row flex-col items-center justify-center gap-2 md:gap-3 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors md:hover:bg-primary/5 md:py-3 md:rounded-xl"
+                href="/settings/profile">
+                <span class="material-symbols-outlined">settings</span>
+                <p class="text-[10px] md:text-sm font-medium leading-normal tracking-tight">Ajustes</p>
+            </a>
+        </div>
+        <script>
+            // Set default dates
+            const today = new Date();
+            document.getElementById('launchDate').valueAsDate = today;
+            const nextMonth = new Date();
+            nextMonth.setMonth(today.getMonth() + 1);
+            document.getElementById('endDate').valueAsDate = nextMonth;
+
+            let isManualCuotas = false;
+
+            function toggleManualCuotas() {
+                isManualCuotas = !isManualCuotas;
+                const container = document.getElementById('manualCuotasContainer');
+                container.classList.toggle('hidden', !isManualCuotas);
+                if (!isManualCuotas) {
+                    calculateInstallments(); // Recalculate if manual mode is off
+                }
+            }
+
+            function manualCuotasChanged() {
+                if (isManualCuotas) {
+                    const manualVal = parseInt(document.getElementById('loanInstallments').value) || 1;
+                    document.getElementById('displayCuotas').innerText = manualVal;
+                    calculateSummary();
+                }
+            }
+
+            function calculateInstallments() {
+                const startStr = document.getElementById('launchDate').value;
+                const endStr = document.getElementById('endDate').value;
+                const freq = document.getElementById('loanFrequency').value;
+
+                if (!startStr || !endStr) return;
+
+                const start = new Date(startStr);
+                const end = new Date(endStr);
+
+                if (isNaN(start) || isNaN(end) || end <= start) {
+                    if (!isManualCuotas) {
+                        document.getElementById('displayCuotas').innerText = '0';
+                        document.getElementById('loanInstallments').value = 0;
+                        calculateSummary();
+                    }
+                    return;
+                }
+
+                const diffTime = Math.abs(end - start);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                let cuotas = 0;
+                if (freq === 'mensual') {
+                    cuotas = Math.max(1, Math.round(diffDays / 30.44));
+                } else if (freq === 'quincenal') {
+                    cuotas = Math.max(1, Math.round(diffDays / 15));
+                } else if (freq === 'semanal') {
+                    cuotas = Math.max(1, Math.round(diffDays / 7));
+                } else if (freq === 'diario') {
+                    cuotas = Math.max(1, diffDays);
+                }
+
+                if (!isManualCuotas) {
+                    document.getElementById('displayCuotas').innerText = cuotas;
+                    document.getElementById('loanInstallments').value = cuotas;
+                    calculateSummary();
+                }
+            }
+
+            const tasaActual = Number("{{ tasa_actual }}");
+            const capitalUSD = Number("{{ user.capital_total_usd }}");
+            const capitalVES = Number("{{ user.capital_total_ves }}");
+
+            function toggleSidebar() {
+                const sidebar = document.getElementById('sidebar');
+                const overlay = document.getElementById('sidebar-overlay');
+                sidebar.classList.toggle('-translate-x-full');
+                overlay.classList.toggle('hidden');
+            }
+
+            function formatMoney(amount) {
+                return new Intl.NumberFormat('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount);
+            }
+
+            function updateSummaryText(id, amount, currency) {
+                const el = document.getElementById(id);
+                const symbol = currency === 'USD' ? '$' : 'Bs.';
+                el.innerText = symbol + ' ' + formatMoney(amount);
+            }
+
+            function calculateSummary() {
+                const amountRaw = parseFloat(document.getElementById('loanAmount').value) || 0;
+                const interestPercent = parseFloat(document.getElementById('loanInterest').value) || 0;
+                const installments = parseInt(document.getElementById('loanInstallments').value) || 0;
+                const currency = document.querySelector('input[name="moneda"]:checked').value;
+                const freq = document.getElementById('loanFrequency').value;
+
+                let amountUSD = amountRaw;
+                let amountBaseDisplay = amountRaw;
+                let symbolBase = currency === 'USD' ? '$' : 'Bs.';
+
+                if (currency === 'VES') {
+                    amountUSD = amountRaw / tasaActual;
+                    // For indexed VES, we show USD as the internal base reference
+                    symbolBase = '$';
+                    amountBaseDisplay = amountUSD;
+                }
+
+                const totalInterestUSD = amountUSD * (interestPercent / 100) * (installments || 1);
+                const totalToPayUSD = amountUSD + totalInterestUSD;
+                const perInstallmentUSD = installments > 0 ? totalToPayUSD / installments : totalToPayUSD;
+
+                // Updated symbols for display
+                const displaySymbol = currency === 'USD' ? '$' : 'Bs.';
+
+                document.getElementById('amountCurrencySymbol').innerText = currency === 'USD' ? '$' : 'Bs.';
+
+                // Reference Base in USD if indexed
+                if (currency === 'VES') {
+                    document.getElementById('summaryBase').innerText = `$${formatMoney(amountUSD)} (Ref)`;
+                    document.getElementById('summaryInterest').innerText = `$${formatMoney(totalInterestUSD)}`;
+
+                    const totalInVES = totalToPayUSD * tasaActual;
+                    const installmentInVES = perInstallmentUSD * tasaActual;
+
+                    document.getElementById('summaryTotal').innerText = `Bs. ${formatMoney(totalInVES)}`;
+                    document.getElementById('summaryInstallment').innerText = `Bs. ${formatMoney(installmentInVES)}`;
+                } else {
+                    document.getElementById('summaryBase').innerText = `$${formatMoney(amountRaw)}`;
+                    document.getElementById('summaryInterest').innerText = `$${formatMoney(totalInterestUSD)}`;
+                    document.getElementById('summaryTotal').innerText = `$${formatMoney(totalToPayUSD)}`;
+                    document.getElementById('summaryInstallment').innerText = `$${formatMoney(perInstallmentUSD)}`;
+                }
+
+                const freqLabels = { 'mensual': '/ MES', 'quincenal': '/ QUINCENA', 'semanal': '/ SEMANA', 'diario': '/ DÍA' };
+                document.getElementById('summaryFreqText').innerText = freqLabels[freq];
+
+                // Validate Capital
+                const warningDiv = document.getElementById('capitalWarning');
+                const warningText = document.getElementById('capitalWarningText');
+                const submitBtn = document.getElementById('submitBtn');
+
+                let capitalSuficiente = true;
+                if (currency === 'USD') {
+                    if (amountRaw > capitalUSD) {
+                        warningText.innerText = `Capital en USD no disponible (Tienes $${capitalUSD.toFixed(2)})`;
+                        capitalSuficiente = false;
+                    }
+                } else if (currency === 'VES') {
+                    if (amountRaw > capitalVES) {
+                        warningText.innerText = `Capital en VES no disponible (Tienes Bs. ${capitalVES.toFixed(2)})`;
+                        capitalSuficiente = false;
+                    }
+                }
+
+                if (!capitalSuficiente) {
+                    warningDiv.classList.remove('hidden');
+                    submitBtn.disabled = true;
+                } else {
+                    warningDiv.classList.add('hidden');
+                    submitBtn.disabled = false;
+                }
+
+                // Enable/Disable Share Button
+                const shareBtn = document.getElementById('shareBtn');
+                if (amountRaw > 0 && document.getElementById('selectedClientId').value) {
+                    shareBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    shareBtn.disabled = false;
+                } else {
+                    shareBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                    shareBtn.disabled = true;
+                }
+            }
+
+            function shareOnWhatsApp() {
+                const clientName = document.getElementById('clientSearchInput').value;
+                const clientPhone = document.getElementById('selectedClientPhone').value;
+                const amountRaw = parseFloat(document.getElementById('loanAmount').value) || 0;
+                const currency = document.querySelector('input[name="moneda"]:checked').value;
+                const installments = parseInt(document.getElementById('loanInstallments').value) || 0;
+                const freq = document.getElementById('loanFrequency').value;
+                const totalText = document.getElementById('summaryTotal').innerText;
+                const cuotaText = document.getElementById('summaryInstallment').innerText;
+                const freqText = document.getElementById('summaryFreqText').innerText;
+
+                let message = `*Melo Finance - Cotización de Préstamo*\n\n`;
+                message += `Hola *${clientName}*, aquí tienes el presupuesto solicitado:\n\n`;
+                message += `💰 *Monto:* ${currency === 'USD' ? '$' : 'Bs.'}${formatMoney(amountRaw)}\n`;
+                message += `📅 *Cuotas:* ${installments} pagos ${freq}\n`;
+                message += `💳 *Monto por Cuota:* ${cuotaText}\n`;
+                message += `📈 *Total a Pagar:* ${totalText}\n\n`;
+                message += `_Cotización válida por hoy. Sujeta a aprobación._`;
+
+                const encodedMessage = encodeURIComponent(message);
+                let whatsappUrl = `https://wa.me/`;
+                if (clientPhone) {
+                    // Clean phone number (remove non-digits)
+                    const cleanPhone = clientPhone.replace(/\D/g, '');
+                    whatsappUrl += `${cleanPhone}`;
+                }
+                whatsappUrl += `?text=${encodedMessage}`;
+
+                window.open(whatsappUrl, '_blank');
+            }
+
+            function toggleDropdown() {
+                const dropdown = document.getElementById('clientDropdown');
+                dropdown.classList.toggle('hidden');
+            }
+
+            function showDropdown() {
+                document.getElementById('clientDropdown').classList.remove('hidden');
+            }
+
+            function selectClient(id, name, phone) {
+                document.getElementById('selectedClientId').value = id;
+                document.getElementById('clientSearchInput').value = name;
+                document.getElementById('selectedClientPhone').value = phone || '';
+                document.getElementById('clientDropdown').classList.add('hidden');
+                calculateSummary();
+            }
+
+            function filterClientsSearch() {
+                const query = document.getElementById('clientSearchInput').value.toLowerCase();
+                const options = document.querySelectorAll('.client-option');
+                options.forEach(opt => {
+                    const name = opt.dataset.name;
+                    opt.classList.toggle('hidden', !name.includes(query));
+                });
+                document.getElementById('clientDropdown').classList.remove('hidden');
+            }
+
+            // Trigger on currency change
+            document.querySelectorAll('input[name="moneda"]').forEach(radio => {
+                radio.addEventListener('change', calculateSummary);
+            });
+
+            function updateFileCount() {
+                const input = document.getElementById('multimediaInput');
+                const text = document.getElementById('fileCountText');
+                if (input.files.length > 0) {
+                    text.innerText = `${input.files.length} archivo(s) seleccionado(s)`;
+                    text.classList.add('text-primary');
+                } else {
+                    text.innerText = 'Adjuntar fotos o documentos';
+                    text.classList.remove('text-primary');
+                }
+            }
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function (event) {
+                const container = document.getElementById('clientSelectorContainer');
+                if (container && !container.contains(event.target)) {
+                    document.getElementById('clientDropdown').classList.add('hidden');
+                }
+            });
+
+            function openQuickClientModal() {
+                document.getElementById('quickClientModal').classList.remove('hidden');
+                document.getElementById('qcNombre').focus();
+            }
+
+            function closeQuickClientModal() {
+                document.getElementById('quickClientModal').classList.add('hidden');
+                document.getElementById('qcNombre').value = '';
+                document.getElementById('qcCedula').value = '';
+                document.getElementById('qcTelefono').value = '';
+                document.getElementById('qcError').classList.add('hidden');
+                document.getElementById('qcSubmitBtn').disabled = false;
+            }
+
+            async function submitQuickClient() {
+                const nombre = document.getElementById('qcNombre').value.trim();
+                const cedula = document.getElementById('qcCedula').value.trim();
+                const telefono = document.getElementById('qcTelefono').value.trim();
+                const errorEl = document.getElementById('qcError');
+                const btn = document.getElementById('qcSubmitBtn');
+
+                if (!nombre) {
+                    errorEl.textContent = 'El nombre es obligatorio.';
+                    errorEl.classList.remove('hidden');
+                    return;
+                }
+
+                btn.disabled = true;
+                errorEl.classList.add('hidden');
+
+                try {
+                    const response = await fetch('/clients/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            nombre: nombre,
+                            cedula: cedula,
+                            telefono: telefono,
+                            direccion: ""
+                        })
+                    });
+
+                    if (response.ok) {
+                        const newClient = await response.json();
+                        const dropdown = document.getElementById('clientDropdown');
+
+                        // Remover mensaje si no hay clientes previos
+                        const emptyMsg = dropdown.querySelector('.italic');
+                        if (emptyMsg) emptyMsg.remove();
+
+                        const newOption = document.createElement('div');
+                        newOption.className = 'client-option px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer flex items-center gap-3 transition-colors';
+                        newOption.setAttribute('data-id', newClient.id);
+                        newOption.setAttribute('data-name', newClient.nombre.toLowerCase());
+                        newOption.onclick = () => selectClient(newClient.id, newClient.nombre);
+
+                        const letterIcon = document.createElement('div');
+                        letterIcon.className = 'size-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs';
+                        letterIcon.textContent = newClient.nombre.charAt(0).toUpperCase();
+
+                        const nameSpan = document.createElement('span');
+                        nameSpan.className = 'font-bold text-slate-700 dark:text-slate-200';
+                        nameSpan.textContent = newClient.nombre;
+
+                        newOption.appendChild(letterIcon);
+                        newOption.appendChild(nameSpan);
+
+                        dropdown.insertBefore(newOption, dropdown.firstChild);
+                        selectClient(newClient.id, newClient.nombre, newClient.telefono);
+                        closeQuickClientModal();
+
+                        const parentContainer = document.getElementById('clientSelectorContainer').parentElement;
+                        const successMsg = document.createElement('div');
+                        successMsg.className = 'mt-2 text-xs text-green-600 dark:text-green-400 font-bold fade-out';
+                        successMsg.textContent = '¡Cliente añadido rápidamente!';
+                        parentContainer.appendChild(successMsg);
+                        setTimeout(() => successMsg.remove(), 4000);
+                    } else {
+                        errorEl.textContent = 'Error al crear el cliente.';
+                        errorEl.classList.remove('hidden');
+                        btn.disabled = false;
+                    }
+                } catch (error) {
+                    errorEl.textContent = 'Error de conexión.';
+                    errorEl.classList.remove('hidden');
+                    btn.disabled = false;
+                }
+            }
+
+            // Initial setup
+            calculateInstallments();
+        </script>
+        <!-- Bottom Navigation Bar -->
+        <div
+            class="fixed bottom-0 md:bottom-6 left-0 right-0 flex max-w-md md:max-w-3xl lg:max-w-5xl mx-auto gap-2 border-t md:border border-slate-200 dark:border-slate-700 md:rounded-3xl md:shadow-2xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-4 pb-6 pt-2 md:py-2 z-50 transition-all">
+            <a class="flex flex-1 md:flex-row flex-col items-center justify-center gap-2 md:gap-3 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors md:hover:bg-primary/5 md:py-3 md:rounded-xl"
+                href="/dashboard">
+                <span class="material-symbols-outlined">dashboard</span>
+                <p class="text-[10px] md:text-sm font-medium leading-normal tracking-tight">Dashboard</p>
+            </a>
+            <a class="flex flex-1 md:flex-row flex-col items-center justify-center gap-2 md:gap-3 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors md:hover:bg-primary/5 md:py-3 md:rounded-xl"
+                href="/clients">
+                <span class="material-symbols-outlined">group</span>
+                <p class="text-[10px] md:text-sm font-medium leading-normal tracking-tight">Clientes</p>
+            </a>
+            <a class="flex flex-1 md:flex-row flex-col items-center justify-center gap-2 md:gap-3 text-primary md:hover:bg-primary/5 md:py-3 md:rounded-xl transition-colors"
+                href="/loans">
+                <span class="material-symbols-outlined"
+                    style="font-variation-settings: 'FILL' 1;">account_balance_wallet</span>
+                <p class="text-[10px] md:text-sm font-bold leading-normal tracking-tight">Préstamos</p>
+            </a>
+            <a class="flex flex-1 md:flex-row flex-col items-center justify-center gap-2 md:gap-3 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors md:hover:bg-primary/5 md:py-3 md:rounded-xl"
+                href="/settings/profile">
+                <span class="material-symbols-outlined">settings</span>
+                <p class="text-[10px] md:text-sm font-medium leading-normal tracking-tight">Ajustes</p>
+            </a>
+        </div>
+    </div>
+</body>
+
+</html>

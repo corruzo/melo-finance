@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport" />
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Melo Finance">
+    <meta name="theme-color" content="#043dae">
+    <title>Melo Finance - Préstamos</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#043dae",
+                        "background-light": "#f5f6f8",
+                        "background-dark": "#0f1623",
+                    },
+                    fontFamily: { "display": ["Manrope", "sans-serif"] },
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            overscroll-behavior-y: contain;
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .action-card:active {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen">
+    <!-- Sidebar Overlay -->
+    <div id="sidebar-overlay" onclick="toggleSidebar()"
+        class="fixed inset-0 bg-black/50 z-[90] hidden backdrop-blur-sm transition-opacity"></div>
+
+    <!-- Sidebar / Drawer -->
+    <div id="sidebar"
+        class="fixed top-0 left-0 bottom-0 w-64 bg-white dark:bg-slate-900 z-[100] -translate-x-full transition-transform duration-300 ease-in-out border-r border-slate-200 dark:border-slate-800 flex flex-col">
+        <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+            <h2 class="text-xl font-black text-primary italic">Melo <span
+                    class="text-slate-900 dark:text-white not-italic">Finance</span></h2>
+            <button onclick="toggleSidebar()" class="text-slate-400 hover:text-slate-900 dark:hover:text-white">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <nav class="flex-1 p-4 space-y-2">
+            <a href="/dashboard"
+                class="flex items-center gap-3 p-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                <span class="material-symbols-outlined">dashboard</span> Dashboard
+            </a>
+            <a href="/clients"
+                class="flex items-center gap-3 p-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                <span class="material-symbols-outlined">group</span> Clientes
+            </a>
+            <a href="/loans" class="flex items-center gap-3 p-3 rounded-xl bg-primary/5 text-primary font-bold">
+                <span class="material-symbols-outlined">account_balance_wallet</span> Centro de Préstamos
+            </a>
+            <a href="/history/loans"
+                class="flex items-center gap-3 p-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                <span class="material-symbols-outlined">history</span> Historial Préstamos
+            </a>
+            <a href="/history/movements"
+                class="flex items-center gap-3 p-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                <span class="material-symbols-outlined">receipt_long</span> Movimientos
+            </a>
+            <a href="/settings/profile"
+                class="flex items-center gap-3 p-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                <span class="material-symbols-outlined">settings</span> Ajustes
+            </a>
+        </nav>
+        <div class="p-4 border-t border-slate-100 dark:border-slate-800">
+            <a href="/logout"
+                class="flex items-center gap-3 p-3 rounded-xl text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors font-bold">
+                <span class="material-symbols-outlined">logout</span> Cerrar Sesión
+            </a>
+        </div>
+    </div>
+    <div
+        class="relative flex min-h-screen w-full flex-col max-w-5xl mx-auto bg-white dark:bg-slate-900 md:shadow-2xl md:border-x border-slate-200 dark:border-slate-800">
+        <!-- Header -->
+        <header
+            class="flex items-center justify-between p-4 sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-100 dark:border-slate-800">
+            <button onclick="toggleSidebar()"
+                class="text-slate-900 dark:text-slate-100 flex size-10 shrink-0 items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
+                <span class="material-symbols-outlined">menu</span>
+            </button>
+            <div class="flex-1 flex flex-col items-center">
+                <h2
+                    class="text-primary italic font-black text-2xl md:text-3xl tracking-tight leading-none pointer-events-none">
+                    Melo
+                    <span class="text-slate-900 dark:text-white not-italic">Finance</span>
+                </h2>
+                <p class="text-[10px] md:text-sm text-slate-400 uppercase font-black tracking-[0.2em] mt-1">Centro de
+                    Préstamos</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <a href="/notifications"
+                    class="flex size-10 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-primary transition-colors relative">
+                    <span class="material-symbols-outlined">notifications</span>
+                    {% if unread_count > 0 %}
+                    <span
+                        class="absolute top-2 right-2 w-4 h-4 bg-red-500 rounded-full border border-white dark:border-slate-900 text-[10px] text-white font-bold flex items-center justify-center">{{
+                        unread_count }}</span>
+                    {% endif %}
+                </a>
+                <a href="/settings/profile"
+                    class="flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
+                    <span class="material-symbols-outlined">person</span>
+                </a>
+            </div>
+        </header>
+
+        <main class="flex-1 p-4 md:p-6 space-y-6">
+            <!-- Quick Stats Summary -->
+            <div class="grid grid-cols-3 gap-4 md:gap-6">
+                <div
+                    class="bg-primary/5 dark:bg-primary/10 p-5 rounded-3xl border border-primary/10 text-center flex flex-col justify-center">
+                    <p class="text-[10px] md:text-xs uppercase font-black text-slate-400 mb-1 tracking-widest">Activos
+                    </p>
+                    <p class="text-2xl md:text-4xl font-black text-primary">{{ total_activos }}</p>
+                </div>
+                <div
+                    class="{% if vencidos > 0 %}bg-red-500/10 border-red-500/20{% else %}bg-slate-50 dark:bg-slate-800{% endif %} p-5 rounded-3xl border text-center flex flex-col justify-center">
+                    <p class="text-[10px] md:text-xs uppercase font-black text-slate-400 mb-1 tracking-widest">Vencidos
+                    </p>
+                    <p
+                        class="text-2xl md:text-4xl font-black {% if vencidos > 0 %}text-red-500{% else %}text-slate-400{% endif %}">
+                        {{ vencidos }}</p>
+                </div>
+                <div
+                    class="bg-slate-50 dark:bg-slate-800 p-5 rounded-3xl border border-slate-100 dark:border-slate-800 text-center flex flex-col justify-center">
+                    <p class="text-[10px] md:text-xs uppercase font-black text-slate-400 mb-1 tracking-widest">Por
+                        Cobrar</p>
+                    <p class="text-2xl md:text-4xl font-black text-slate-900 dark:text-white">${{
+                        total_prestado|format_currency }}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Hub Actions -->
+            <div class="grid grid-cols-2 gap-4">
+                <a href="/loans/new"
+                    class="action-card flex flex-col items-center justify-center p-6 rounded-3xl bg-primary text-white shadow-xl shadow-primary/20 transition-all hover:translate-y-[-2px]">
+                    <div class="size-12 bg-white/20 rounded-2xl flex items-center justify-center mb-3">
+                        <span class="material-symbols-outlined text-3xl">add_card</span>
+                    </div>
+                    <span class="font-bold text-sm">Nuevo Préstamo</span>
+                </a>
+                <a href="/history/loans"
+                    class="action-card flex flex-col items-center justify-center p-6 rounded-3xl bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 transition-all hover:bg-slate-50">
+                    <div
+                        class="size-12 bg-slate-100 dark:bg-slate-700 rounded-2xl flex items-center justify-center mb-3">
+                        <span
+                            class="material-symbols-outlined text-3xl text-slate-600 dark:text-slate-400">history</span>
+                    </div>
+                    <span class="font-bold text-sm text-slate-900 dark:text-white">Ver Historial</span>
+                </a>
+            </div>
+
+            <!-- List of Active Loans (As Assets) -->
+            <div class="space-y-4">
+                <div class="flex items-center justify-between px-2">
+                    <h3 class="font-black text-slate-900 dark:text-white uppercase text-xs tracking-[0.2em]">Cartera
+                        Activa</h3>
+                    <span class="text-[10px] md:text-xs font-black text-slate-400 uppercase tracking-widest">{{
+                        total_activos }}
+                        TOTAL</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {% for l in loans %}
+                    <div
+                        class="group relative bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm hover:border-primary/50 transition-all hover:shadow-xl hover:shadow-primary/5">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <div
+                                    class="size-14 rounded-2xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                                    <span
+                                        class="material-symbols-outlined text-3xl {% if l.atraso %}text-red-500 animate-pulse{% else %}text-emerald-500{% endif %}">
+                                        {% if l.atraso %}warning{% else %}verified_user{% endif %}
+                                    </span>
+                                </div>
+                                <div onclick="window.location.href='/clients/{{ l.cliente_id }}'"
+                                    class="cursor-pointer">
+                                    <h4 class="font-black text-base text-slate-900 dark:text-white">{{ l.cliente }}
+                                    </h4>
+                                    <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Saldo: {{
+                                        "$" if l.moneda == "USD" else "Bs." }} {{ l.deuda|format_currency }}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button
+                                    onclick="openPaymentModal('{{ l.id }}', '{{ l.cliente }}', '{{ l.moneda }}', '{{ l.deuda }}')"
+                                    class="flex h-12 px-6 items-center justify-center rounded-2xl bg-primary text-white text-xs font-black tracking-widest hover:bg-melo-dark transition-all shadow-lg shadow-primary/20 hover:scale-[1.02]">
+                                    <span class="material-symbols-outlined text-sm mr-2">payments</span> COBRAR
+                                </button>
+                                <form action="/loans/{{ l.id }}/cancel" method="POST"
+                                    onsubmit="return confirm('¿Anular este préstamo? El capital pendiente será devuelto a tu fondo.')">
+                                    <button type="submit"
+                                        class="flex h-12 w-12 items-center justify-center rounded-2xl bg-red-50 dark:bg-red-500/10 text-red-400 hover:text-red-600 hover:bg-red-100 dark:hover:bg-red-500/20 transition-all">
+                                        <span class="material-symbols-outlined text-sm">cancel</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="col-span-full py-12 text-center">
+                        <span class="material-symbols-outlined text-5xl text-slate-200 mb-4">no_accounts</span>
+                        <p class="text-base font-black text-slate-300 uppercase tracking-widest">No hay préstamos
+                            activos</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Payment Modal -->
+            <div id="paymentModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
+                <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closePaymentModal()"></div>
+                <div
+                    class="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 shadow-2xl border border-slate-100 dark:border-slate-800 animate-in fade-in zoom-in duration-200">
+                    <div class="flex flex-col items-center mb-6">
+                        <div
+                            class="size-16 rounded-3xl bg-primary/10 text-primary flex items-center justify-center mb-4">
+                            <span class="material-symbols-outlined text-4xl">payments</span>
+                        </div>
+                        <h3 class="text-xl font-black text-slate-900 dark:text-white" id="modalClientName">Registrar
+                            Cobro</h3>
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Abono a préstamo</p>
+                    </div>
+
+                    <form id="paymentForm" method="POST" action="" class="space-y-6">
+                        <!-- Currency Selector -->
+                        <div class="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl">
+                            <label class="flex-1 relative cursor-pointer">
+                                <input checked type="radio" name="moneda_pago" value="USD" class="peer sr-only"
+                                    onchange="updatePaymentAmount()">
+                                <div
+                                    class="py-2.5 text-center text-xs font-bold rounded-xl text-slate-500 peer-checked:bg-white dark:peer-checked:bg-slate-700 peer-checked:text-primary peer-checked:shadow-sm transition-all">
+                                    USD</div>
+                            </label>
+                            <label class="flex-1 relative cursor-pointer">
+                                <input type="radio" name="moneda_pago" value="VES" class="peer sr-only"
+                                    onchange="updatePaymentAmount()">
+                                <div
+                                    class="py-2.5 text-center text-xs font-bold rounded-xl text-slate-500 peer-checked:bg-white dark:peer-checked:bg-slate-700 peer-checked:text-primary peer-checked:shadow-sm transition-all">
+                                    VES</div>
+                            </label>
+                        </div>
+
+                        <!-- Amount Input -->
+                        <div class="space-y-2">
+                            <label class="text-[10px] uppercase font-bold text-slate-400 ml-2">Monto a abonar</label>
+                            <div class="relative">
+                                <span class="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-primary"
+                                    id="modalCurrencySymbol">$</span>
+                                <input type="number" step="0.01" name="monto" id="modalAmountInput" required
+                                    inputmode="decimal"
+                                    class="w-full h-14 pl-10 pr-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border-none focus:ring-2 focus:ring-primary font-black text-xl text-slate-900 dark:text-white">
+                            </div>
+                        </div>
+
+                        <input type="hidden" name="tasa_pago" value="{{ tasa_actual }}">
+
+                        <div class="pt-2 flex gap-3">
+                            <button type="button" onclick="closePaymentModal()"
+                                class="flex-1 h-12 rounded-2xl text-slate-500 font-bold hover:bg-slate-50 transition-all">Cancelar</button>
+                            <button type="submit"
+                                class="flex-[2] h-12 bg-primary text-white rounded-2xl font-black shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">Confirmar
+                                Pago</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+
+        <script>
+            function toggleSidebar() {
+                const sidebar = document.getElementById('sidebar');
+                const overlay = document.getElementById('sidebar-overlay');
+                sidebar.classList.toggle('-translate-x-full');
+                overlay.classList.toggle('hidden');
+            }
+
+            let currentLoan = {};
+            const tasa_bcv = Number("{{ tasa_actual }}");
+
+            function openPaymentModal(id, name, moneda, deuda) {
+                currentLoan = { id, name, moneda, deuda: parseFloat(deuda) };
+                document.getElementById('modalClientName').innerText = name;
+                document.getElementById('paymentForm').action = `/loans/${id}/pay`;
+
+                // Set default amount to pending debt (converted if necessary)
+                document.getElementById('modalAmountInput').value = deuda;
+
+                document.getElementById('paymentModal').classList.remove('hidden');
+            }
+
+            function closePaymentModal() {
+                document.getElementById('paymentModal').classList.add('hidden');
+            }
+
+            function updatePaymentAmount() {
+                const currency = document.querySelector('input[name="moneda_pago"]:checked').value;
+                const symbol = document.getElementById('modalCurrencySymbol');
+                const input = document.getElementById('modalAmountInput');
+
+                symbol.innerText = currency === 'USD' ? '$' : 'Bs.';
+
+                // Recalculate suggested amount
+                if (currency === currentLoan.moneda) {
+                    input.value = currentLoan.deuda.toFixed(2);
+                } else if (currency === 'VES' && currentLoan.moneda === 'USD') {
+                    input.value = (currentLoan.deuda * tasa_bcv).toFixed(2);
+                } else if (currency === 'USD' && currentLoan.moneda === 'VES') {
+                    input.value = (currentLoan.deuda / tasa_bcv).toFixed(2);
+                }
+            }
+        </script>
+
+        <div class="h-28"></div>
+
+        <!-- Bottom Navigation Bar -->
+        <div
+            class="fixed bottom-0 md:bottom-6 left-0 right-0 flex max-w-md md:max-w-3xl lg:max-w-5xl mx-auto gap-2 border-t md:border border-slate-200 dark:border-slate-700 md:rounded-3xl md:shadow-2xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-4 pb-6 pt-2 md:py-2 z-50 transition-all">
+            <a class="flex flex-1 md:flex-row flex-col items-center justify-center gap-2 md:gap-3 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors md:hover:bg-primary/5 md:py-3 md:rounded-xl"
+                href="/dashboard">
+                <span class="material-symbols-outlined">dashboard</span>
+                <p class="text-[10px] md:text-sm font-medium leading-normal tracking-tight">Dashboard</p>
+            </a>
+            <a class="flex flex-1 md:flex-row flex-col items-center justify-center gap-2 md:gap-3 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors md:hover:bg-primary/5 md:py-3 md:rounded-xl"
+                href="/clients">
+                <span class="material-symbols-outlined">group</span>
+                <p class="text-[10px] md:text-sm font-medium leading-normal tracking-tight">Clientes</p>
+            </a>
+            <a class="flex flex-1 md:flex-row flex-col items-center justify-center gap-2 md:gap-3 text-primary md:hover:bg-primary/5 md:py-3 md:rounded-xl transition-colors"
+                href="/loans">
+                <span class="material-symbols-outlined"
+                    style="font-variation-settings: 'FILL' 1;">account_balance_wallet</span>
+                <p class="text-[10px] md:text-sm font-bold leading-normal tracking-tight">Préstamos</p>
+            </a>
+            <a class="flex flex-1 md:flex-row flex-col items-center justify-center gap-2 md:gap-3 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors md:hover:bg-primary/5 md:py-3 md:rounded-xl"
+                href="/settings/profile">
+                <span class="material-symbols-outlined">settings</span>
+                <p class="text-[10px] md:text-sm font-medium leading-normal tracking-tight">Ajustes</p>
+            </a>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,122 @@
+import os
+from sqlalchemy import create_engine, Column, Integer, String, Float, ForeignKey, DateTime, Date, Boolean
+from sqlalchemy.orm import declarative_base, sessionmaker, relationship
+from datetime import datetime
+
+# URL de la base de datos (Usa variable de entorno para la nube o SQLite local por defecto)
+DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///./loans.db")
+
+# Si la URL empieza con postgres:// (como en Render/Neon), cambiarla a postgresql:// para SQLAlchemy
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+# Configuración del motor
+if DATABASE_URL.startswith("sqlite"):
+    engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+else:
+    engine = create_engine(DATABASE_URL)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+Base = declarative_base()
+
+class User(Base):
+    __tablename__ = "users"
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String, unique=True, index=True) # Email/Login
+    nombre = Column(String, nullable=True)
+    apellido = Column(String, nullable=True)
+    hashed_password = Column(String)
+    capital_total_usd = Column(Float, default=0.0)
+    capital_total_ves = Column(Float, default=0.0)
+
+class Client(Base):
+    __tablename__ = "clients"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    nombre = Column(String, index=True)
+    telefono = Column(String)
+    cedula = Column(String, nullable=True)
+    direccion = Column(String)
+    
+    user = relationship("User", backref="clients")
+    loans = relationship("Loan", back_populates="client")
+
+class Rate(Base):
+    __tablename__ = "rates"
+    id = Column(Integer, primary_key=True, index=True)
+    fecha = Column(Date, unique=True, index=True)
+    valor_bs_bcv = Column(Float)
+
+class Loan(Base):
+    __tablename__ = "loans"
+    id = Column(Integer, primary_key=True, index=True)
+    client_id = Column(Integer, ForeignKey("clients.id"))
+    monto_principal = Column(Float) # Base USD indexada
+    monto_original = Column(Float, nullable=True) # Monto en la moneda solicitada originalmente
+    moneda = Column(String) # 'USD' o 'VES'
+    tasa_bcv_snapshot = Column(Float)
+    porcentaje_interes = Column(Float)
+    frecuencia_pagos = Column(String, default="mensual") # 'diario', 'semanal', 'quincenal', 'mensual'
+    cuotas_totales = Column(Integer, default=1)
+    fecha_inicio = Column(Date, default=datetime.utcnow().date)
+    fecha_vencimiento = Column(Date, nullable=True)
+    estatus = Column(String, default="activo") # 'activo', 'pagado', 'anulado'
+    notas = Column(String, nullable=True)
+    fecha_creacion = Column(DateTime, default=datetime.utcnow)
+    
+    client = relationship("Client", back_populates="loans")
+    transactions = relationship("Transaction", back_populates="loan")
+    attachments = relationship("LoanAttachment", back_populates="loan")
+
+class LoanAttachment(Base):
+    __tablename__ = "loan_attachments"
+    id = Column(Integer, primary_key=True, index=True)
+    loan_id = Column(Integer, ForeignKey("loans.id"))
+    file_path = Column(String)
+    
+    loan = relationship("Loan", back_populates="attachments")
+
+class Transaction(Base):
+    __tablename__ = "transactions"
+    id = Column(Integer, primary_key=True, index=True)
+    loan_id = Column(Integer, ForeignKey("loans.id"))
+    tipo = Column(String) # 'pago_cuota', 'egreso_capital', 'ingreso_extra'
+    monto = Column(Float) # Monto normalizado (USD) para cálculos de deuda
+    monto_real = Column(Float, nullable=True) # Monto en la moneda original del pago
+    moneda = Column(String, default="USD") # Moneda del pago ('USD' o 'VES')
+    fecha = Column(DateTime, default=datetime.utcnow)
+    
+    loan = relationship("Loan", back_populates="transactions")
+
+class CapitalTransaction(Base):
+    __tablename__ = "capital_transactions"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    tipo = Column(String) # 'inversion', 'retiro'
+    monto = Column(Float)
+    moneda = Column(String, default="USD") # 'USD' o 'VES'
+    fecha = Column(DateTime, default=datetime.utcnow)
+    
+    user = relationship("User", backref="capital_transactions")
+
+class Notification(Base):
+    __tablename__ = "notifications"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    titulo = Column(String)
+    mensaje = Column(String)
+    fecha = Column(DateTime, default=datetime.utcnow)
+    tipo = Column(String, default="info") # 'info', 'alert', 'success'
+    leida = Column(Boolean, default=False)
+    
+    user = relationship("User", backref="notifications")
+
+def init_db():
+    Base.metadata.create_all(bind=engine)
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()

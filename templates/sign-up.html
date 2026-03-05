@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport" />
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Melo Finance">
+    <meta name="theme-color" content="#043dae">
+    <title>Melo Finance - Crear Cuenta</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&amp;display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#043dae",
+                        "background-light": "#f5f6f8",
+                        "background-dark": "#0f1623",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem",
+                        "lg": "1rem",
+                        "xl": "1.5rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Manrope', sans-serif;
+        }
+
+        .soft-shadow {
+            box-shadow: 0 4px 20px -2px rgba(11, 94, 218, 0.05);
+        }
+    </style>
+</head>
+
+<body class="bg-background-light dark:bg-background-dark antialiased flex items-center justify-center min-h-screen p-4">
+    <div
+        class="relative flex w-full flex-col bg-white dark:bg-slate-900 shadow-2xl rounded-3xl border border-slate-200 dark:border-slate-800 max-w-md mx-auto py-6">
+        <!-- Header Navigation -->
+        <div class="flex items-center p-4 pb-2 justify-between">
+            <a href="/login"
+                class="text-slate-900 dark:text-slate-100 flex size-12 shrink-0 items-center justify-center rounded-full hover:bg-primary/10 transition-colors">
+                <span class="material-symbols-outlined">arrow_back_ios_new</span>
+            </a>
+            <div class="flex-1 flex flex-col items-center pr-12">
+                <h1 class="text-primary italic font-black text-xl tracking-tight leading-none">Melo <span
+                        class="text-slate-900 dark:text-white not-italic">Finance</span></h1>
+                <p class="text-[10px] text-slate-400 uppercase font-bold tracking-[0.2em] mt-1">Crear Cuenta</p>
+            </div>
+        </div>
+        <!-- Hero Section -->
+        <div class="px-6 pt-8 pb-4">
+            <h1 class="text-slate-900 dark:text-slate-100 tracking-tight text-[32px] font-extrabold leading-tight">Únete
+                a nosotros</h1>
+            <p class="text-slate-500 dark:text-slate-400 text-base font-medium leading-normal mt-2">Complete sus datos
+                para comenzar su experiencia financiera premium.</p>
+        </div>
+        <!-- Registration Form -->
+        <form action="/signup" method="POST" class="flex flex-col gap-5 px-6 py-4">
+            <!-- Name Field -->
+            <div class="flex flex-col w-full">
+                <label
+                    class="text-slate-900 dark:text-slate-100 text-sm font-bold leading-normal pb-2 ml-1 uppercase tracking-wider">Nombre</label>
+                <div class="relative">
+                    <input name="nombre" required
+                        class="form-input flex w-full rounded-xl text-slate-900 dark:text-slate-100 border-none bg-background-light dark:bg-slate-800/50 h-14 placeholder:text-slate-400 p-[18px] text-base font-medium soft-shadow focus:ring-2 focus:ring-primary/20 transition-all"
+                        placeholder="Tu nombre" type="text" autocomplete="given-name" />
+                </div>
+            </div>
+            <!-- Surname Field -->
+            <div class="flex flex-col w-full">
+                <label
+                    class="text-slate-900 dark:text-slate-100 text-sm font-bold leading-normal pb-2 ml-1 uppercase tracking-wider">Apellido</label>
+                <div class="relative">
+                    <input name="apellido" required
+                        class="form-input flex w-full rounded-xl text-slate-900 dark:text-slate-100 border-none bg-background-light dark:bg-slate-800/50 h-14 placeholder:text-slate-400 p-[18px] text-base font-medium soft-shadow focus:ring-2 focus:ring-primary/20 transition-all"
+                        placeholder="Tu apellido" type="text" autocomplete="family-name" />
+                </div>
+            </div>
+            <!-- Email Field -->
+            <div class="flex flex-col w-full">
+                <label
+                    class="text-slate-900 dark:text-slate-100 text-sm font-bold leading-normal pb-2 ml-1 uppercase tracking-wider">Correo
+                    electrónico</label>
+                <div class="relative">
+                    <input name="email" required
+                        class="form-input flex w-full rounded-xl text-slate-900 dark:text-slate-100 border-none bg-background-light dark:bg-slate-800/50 h-14 placeholder:text-slate-400 p-[18px] text-base font-medium soft-shadow focus:ring-2 focus:ring-primary/20 transition-all"
+                        placeholder="ejemplo@correo.com" type="email" inputmode="email" autocomplete="email" />
+                </div>
+            </div>
+            <!-- Password Field -->
+            <div class="flex flex-col w-full">
+                <label
+                    class="text-slate-900 dark:text-slate-100 text-sm font-bold leading-normal pb-2 ml-1 uppercase tracking-wider">Contraseña</label>
+                <div class="relative group">
+                    <input name="password" required
+                        class="form-input flex w-full rounded-xl text-slate-900 dark:text-slate-100 border-none bg-background-light dark:bg-slate-800/50 h-14 placeholder:text-slate-400 p-[18px] text-base font-medium soft-shadow focus:ring-2 focus:ring-primary/20 transition-all"
+                        placeholder="••••••••" type="password" autocomplete="new-password" />
+                    <button type="button"
+                        class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary transition-colors"
+                        onclick="const p=this.closest('.relative').querySelector('input'); p.type=p.type==='password'?'text':'password'; this.querySelector('span').textContent=p.type==='password'?'visibility':'visibility_off';">
+                        <span class="material-symbols-outlined">visibility</span>
+                    </button>
+                </div>
+            </div>
+            <!-- Terms checkbox -->
+            <div class="flex items-center gap-3 px-1 mt-2">
+                <input class="w-5 h-5 rounded border-slate-300 text-primary focus:ring-primary/20 transition-all"
+                    type="checkbox" />
+                <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Acepto los <span
+                        class="text-primary font-bold">términos y condiciones</span></p>
+            </div>
+            <!-- Action Button -->
+            <div class="mt-auto p-6 pb-2">
+                <button type="submit"
+                    class="flex w-full items-center justify-center h-16 bg-primary text-white rounded-xl text-lg font-bold shadow-lg shadow-primary/30 hover:bg-blue-700 active:scale-[0.98] transition-all">
+                    Crear mi cuenta
+                </button>
+                <div class="flex items-center justify-center mt-6 gap-2">
+                    <p class="text-slate-500 dark:text-slate-400 font-medium">¿Ya tienes una cuenta?</p>
+                    <a class="text-primary font-bold hover:underline" href="/login">Inicia sesión</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</body>
+
+</html>

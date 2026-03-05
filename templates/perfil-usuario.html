@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport" />
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Melo Finance">
+    <meta name="theme-color" content="#043dae">
+    <title>Melo Finance - Mi Perfil</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#043dae",
+                        "background-light": "#f5f6f8",
+                        "background-dark": "#0f1623",
+                    },
+                    fontFamily: { "display": ["Manrope", "sans-serif"] },
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            overscroll-behavior-y: contain;
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen">
+    <!-- Sidebar Overlay -->
+    <div id="sidebar-overlay" onclick="toggleSidebar()"
+        class="fixed inset-0 bg-black/50 z-[90] hidden backdrop-blur-sm transition-opacity"></div>
+
+    <!-- Sidebar / Drawer -->
+    <div id="sidebar"
+        class="fixed top-0 left-0 bottom-0 w-64 bg-white dark:bg-slate-900 z-[100] -translate-x-full transition-transform duration-300 ease-in-out border-r border-slate-200 dark:border-slate-800 flex flex-col">
+        <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+            <h2 class="text-xl font-black text-primary italic">Melo <span
+                    class="text-slate-900 dark:text-white not-italic">Finance</span></h2>
+            <button onclick="toggleSidebar()" class="text-slate-400 hover:text-slate-900 dark:hover:text-white">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <nav class="flex-1 p-4 space-y-2">
+            <a href="/dashboard"
+                class="flex items-center gap-3 p-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                <span class="material-symbols-outlined">dashboard</span> Dashboard
+            </a>
+            <a href="/clients"
+                class="flex items-center gap-3 p-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                <span class="material-symbols-outlined">group</span> Clientes
+            </a>
+            <a href="/loans"
+                class="flex items-center gap-3 p-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                <span class="material-symbols-outlined">account_balance_wallet</span> Préstamos
+            </a>
+            <a href="/history/loans"
+                class="flex items-center gap-3 p-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                <span class="material-symbols-outlined">history</span> Historial
+            </a>
+            <a href="/settings/profile"
+                class="flex items-center gap-3 p-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                <span class="material-symbols-outlined">settings</span> Ajustes
+            </a>
+        </nav>
+        <div class="p-4 border-t border-slate-100 dark:border-slate-800">
+            <a href="/logout"
+                class="flex items-center gap-3 p-3 rounded-xl text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors font-bold">
+                <span class="material-symbols-outlined">logout</span> Cerrar Sesión
+            </a>
+        </div>
+    </div>
+    <div
+        class="relative flex min-h-screen w-full flex-col max-w-5xl mx-auto bg-white dark:bg-slate-900 md:shadow-2xl md:border-x border-slate-200 dark:border-slate-800">
+        <!-- Header Section -->
+        <header
+            class="flex items-center justify-between p-4 sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-100 dark:border-slate-800">
+            <button onclick="toggleSidebar()"
+                class="text-slate-900 dark:text-slate-100 flex size-10 shrink-0 items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
+                <span class="material-symbols-outlined">menu</span>
+            </button>
+            <div class="flex-1 flex flex-col items-center">
+                <h2
+                    class="text-primary italic font-black text-2xl md:text-3xl tracking-tight leading-none pointer-events-none">
+                    Melo
+                    <span class="text-slate-900 dark:text-white not-italic">Finance</span>
+                </h2>
+                <p class="text-[10px] md:text-sm text-slate-400 uppercase font-black tracking-[0.2em] mt-1">Perfil y
+                    Configuración</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <a href="/notifications"
+                    class="flex size-10 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-primary transition-colors relative">
+                    <span class="material-symbols-outlined">notifications</span>
+                    {% if unread_count > 0 %}
+                    <span
+                        class="absolute top-2 right-2 w-4 h-4 bg-red-500 rounded-full border border-white dark:border-slate-900 text-[10px] text-white font-bold flex items-center justify-center">{{
+                        unread_count }}</span>
+                    {% endif %}
+                </a>
+            </div>
+        </header>
+
+        <main class="flex-1 p-4 md:p-8 space-y-8">
+            <!-- Profile Overview -->
+            <div class="flex flex-col items-center py-6 md:py-12">
+                <div class="relative group">
+                    <div
+                        class="w-28 h-28 md:w-40 md:h-40 bg-primary/10 rounded-[2.5rem] md:rounded-[3rem] flex items-center justify-center ring-8 ring-primary/5 group-hover:scale-105 transition-transform duration-500">
+                        <span class="material-symbols-outlined text-primary text-6xl md:text-8xl">person</span>
+                    </div>
+                    <div
+                        class="absolute -bottom-2 -right-2 flex items-center justify-center size-10 md:size-12 bg-primary rounded-full border-4 border-white dark:border-slate-900 text-white shadow-xl">
+                        <span class="material-symbols-outlined text-sm md:text-lg">edit</span>
+                    </div>
+                </div>
+                <h2 class="text-3xl md:text-5xl font-black text-slate-900 dark:text-white mt-8 tracking-tight">{{
+                    user.nombre or 'Usuario' }} {{
+                    user.apellido or '' }}</h2>
+                <p class="text-sm md:text-lg font-bold text-slate-400 uppercase tracking-[0.2em] mt-2 italic">{{
+                    user.username }}</p>
+            </div>
+
+            <!-- Sections Container -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pb-20">
+                <!-- 1. Perfil Section -->
+                <div class="space-y-4">
+                    <div class="flex items-center gap-2 px-2">
+                        <span class="material-symbols-outlined text-primary text-lg">person_edit</span>
+                        <h3 class="font-black text-slate-900 dark:text-white text-sm uppercase tracking-wider">Perfil
+                            Personal</h3>
+                    </div>
+
+                    <div
+                        class="bg-white dark:bg-slate-800/40 rounded-[2rem] p-6 border border-slate-100 dark:border-slate-800 shadow-sm space-y-5">
+                        <form method="POST" action="/settings/profile" class="space-y-4">
+                            <div class="space-y-1.5">
+                                <label
+                                    class="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Nombre</label>
+                                <input name="nombre" type="text" value="{{ user.nombre or '' }}"
+                                    class="w-full h-12 px-4 rounded-xl bg-slate-50 dark:bg-slate-900/50 border-none focus:ring-2 focus:ring-primary text-slate-900 dark:text-white font-bold placeholder-slate-300"
+                                    autocomplete="given-name">
+                            </div>
+                            <div class="space-y-1.5">
+                                <label
+                                    class="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Apellido</label>
+                                <input name="apellido" type="text" value="{{ user.apellido or '' }}"
+                                    class="w-full h-12 px-4 rounded-xl bg-slate-50 dark:bg-slate-900/50 border-none focus:ring-2 focus:ring-primary text-slate-900 dark:text-white font-bold placeholder-slate-300"
+                                    autocomplete="family-name">
+                            </div>
+                            <div class="space-y-1.5">
+                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Nueva
+                                    Contraseña</label>
+                                <input name="password" type="password" placeholder="••••••••"
+                                    class="w-full h-12 px-4 rounded-xl bg-slate-50 dark:bg-slate-900/50 border-none focus:ring-2 focus:ring-primary text-slate-900 dark:text-white font-bold placeholder-slate-300"
+                                    autocomplete="new-password">
+                            </div>
+                            <button type="submit"
+                                class="w-full h-12 bg-primary text-white rounded-xl font-bold hover:shadow-lg hover:shadow-primary/20 transition-all active:scale-[0.98]">
+                                Guardar Perfil
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- 2. Capital Section -->
+                <div class="space-y-4">
+                    <div class="flex items-center gap-2 px-2">
+                        <span class="material-symbols-outlined text-primary text-lg">account_balance</span>
+                        <h3 class="font-black text-slate-900 dark:text-white text-sm uppercase tracking-wider">Gestión
+                            Financiera</h3>
+                    </div>
+
+                    <div
+                        class="bg-white dark:bg-slate-800/40 rounded-[2rem] p-6 border border-slate-100 dark:border-slate-800 shadow-sm space-y-6">
+                        <!-- Balance Cards -->
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="p-4 bg-emerald-500/5 rounded-2xl border border-emerald-500/10">
+                                <p class="text-[9px] font-black text-emerald-600 uppercase mb-1">Capital USD</p>
+                                <p class="text-lg font-black text-emerald-600">${{
+                                    user.capital_total_usd|format_currency }}</p>
+                            </div>
+                            <div class="p-4 bg-blue-500/5 rounded-2xl border border-blue-500/10">
+                                <p class="text-[9px] font-black text-blue-600 uppercase mb-1">Capital VES</p>
+                                <p class="text-lg font-black text-blue-600">Bs. {{
+                                    user.capital_total_ves|format_currency }}</p>
+                            </div>
+                        </div>
+
+                        <form method="POST" action="/settings/capital" class="space-y-4">
+                            <div class="space-y-1.5">
+                                <label
+                                    class="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Capital
+                                    USD</label>
+                                <div class="relative">
+                                    <span
+                                        class="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-primary text-lg">$</span>
+                                    <input name="capital_usd" type="number" step="0.01"
+                                        value="{{ user.capital_total_usd }}"
+                                        class="w-full h-12 pl-10 px-4 rounded-xl bg-slate-50 dark:bg-slate-900/50 border-none focus:ring-2 focus:ring-primary text-slate-900 dark:text-white font-black"
+                                        inputmode="decimal">
+                                </div>
+                            </div>
+                            <div class="space-y-1.5">
+                                <label
+                                    class="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Capital
+                                    VES</label>
+                                <div class="relative">
+                                    <span
+                                        class="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-primary text-sm">Bs.</span>
+                                    <input name="capital_ves" type="number" step="0.01"
+                                        value="{{ user.capital_total_ves }}"
+                                        class="w-full h-12 pl-12 px-4 rounded-xl bg-slate-50 dark:bg-slate-900/50 border-none focus:ring-2 focus:ring-primary text-slate-900 dark:text-white font-black"
+                                        inputmode="decimal">
+                                </div>
+                            </div>
+                            <button type="submit"
+                                class="w-full h-12 bg-white dark:bg-slate-900 text-primary border-2 border-primary/20 rounded-xl font-bold hover:bg-primary/5 transition-all active:scale-[0.98]">
+                                Actualizar Fondos
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Danger Zone -->
+            <div class="w-full pt-4">
+                <a href="/logout"
+                    class="flex items-center justify-center gap-2 p-4 w-full bg-red-500/5 text-red-500 rounded-2xl font-bold text-sm border border-red-500/10 hover:bg-red-500/10 transition-all">
+                    <span class="material-symbols-outlined text-lg">logout</span>
+                    Cerrar Sesión Activa
+                </a>
+            </div>
+        </main>
+    </div>
+
+    <div class="h-24"></div>
+    </div>
+    <!-- Bottom Navigation Bar -->
+    <div
+        class="fixed bottom-0 md:bottom-6 left-0 right-0 flex max-w-md md:max-w-3xl lg:max-w-5xl mx-auto gap-2 border-t md:border border-slate-200 dark:border-slate-700 md:rounded-3xl md:shadow-2xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-4 pb-6 pt-2 md:py-2 z-50 transition-all">
+        <a class="flex flex-1 md:flex-row flex-col items-center justify-center gap-2 md:gap-3 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors md:hover:bg-primary/5 md:py-3 md:rounded-xl"
+            href="/dashboard">
+            <span class="material-symbols-outlined">dashboard</span>
+            <p class="text-[10px] md:text-sm font-medium leading-normal tracking-tight">Dashboard</p>
+        </a>
+        <a class="flex flex-1 md:flex-row flex-col items-center justify-center gap-2 md:gap-3 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors md:hover:bg-primary/5 md:py-3 md:rounded-xl"
+            href="/clients">
+            <span class="material-symbols-outlined">group</span>
+            <p class="text-[10px] md:text-sm font-medium leading-normal tracking-tight">Clientes</p>
+        </a>
+        <a class="flex flex-1 md:flex-row flex-col items-center justify-center gap-2 md:gap-3 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors md:hover:bg-primary/5 md:py-3 md:rounded-xl"
+            href="/loans">
+            <span class="material-symbols-outlined">account_balance_wallet</span>
+            <p class="text-[10px] md:text-sm font-medium leading-normal tracking-tight">Préstamos</p>
+        </a>
+        <a class="flex flex-1 md:flex-row flex-col items-center justify-center gap-2 md:gap-3 text-primary md:hover:bg-primary/5 md:py-3 md:rounded-xl transition-colors"
+            href="/settings/profile">
+            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">settings</span>
+            <p class="text-[10px] md:text-sm font-bold leading-normal tracking-tight">Ajustes</p>
+        </a>
+    </div>
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
+    </script>
+</body>
+
+</html>

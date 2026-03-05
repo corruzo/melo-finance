@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+sqlalchemy
+jinja2
+python-multipart
+itsdangerous
+bcrypt
+requests
+beautifulsoup4
+psycopg2-binary

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html class="light" lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport" />
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Melo Finance">
+    <meta name="theme-color" content="#043dae">
+    <title>Melo Finance · Iniciar sesión</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0,1"
+        rel="stylesheet" />
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "melo": "#043dae",
+                        "melo-dark": "#032b7c",
+                    },
+                    fontFamily: {
+                        sans: ["Outfit", "system-ui", "sans-serif"],
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .logo-text {
+            font-size: 2.2rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            line-height: 1;
+        }
+
+        .logo-melo {
+            color: #043dae;
+        }
+
+        .logo-finance {
+            color: #1e293b;
+        }
+
+        .dark .logo-finance {
+            color: #e2e8f0;
+        }
+
+        /* Ola decorativa en la parte inferior */
+        .wave-bg {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(180deg, transparent 0%, rgba(4, 61, 174, 0.03) 100%);
+            border-radius: 50% 50% 0 0;
+            pointer-events: none;
+        }
+
+        .dark .wave-bg {
+            background: linear-gradient(180deg, transparent 0%, rgba(4, 61, 174, 0.08) 100%);
+        }
+    </style>
+</head>
+
+<body class="min-h-screen flex flex-col bg-white dark:bg-black relative overflow-x-hidden">
+    <!-- Fondo con gradiente dinámico -->
+    <div
+        class="fixed inset-0 bg-gradient-to-br from-melo/10 via-transparent to-transparent dark:from-melo/5 pointer-events-none">
+    </div>
+    <div class="wave-bg"></div>
+
+    <!-- Contenido principal -->
+    <div
+        class="relative flex-1 flex flex-col md:grid md:grid-cols-2 md:items-center max-w-7xl mx-auto w-full px-6 py-8 min-h-screen gap-12">
+
+        <!-- Sección Branding (Izquierda en PC, Superior en Móvil) -->
+        <div class="flex flex-col justify-center md:pr-12">
+            <div class="logo-text text-4xl sm:text-5xl md:text-7xl lg:text-8xl">
+                <span class="logo-melo">Melo</span>
+                <span class="logo-finance">Finance</span>
+            </div>
+            <p
+                class="text-gray-500 dark:text-gray-400 text-lg md:text-2xl lg:text-3xl mt-4 max-w-[300px] md:max-w-md font-medium leading-tight">
+                Gestiona tus préstamos de manera inteligente y profesional
+            </p>
+        </div>
+
+        <!-- Sección Formulario (Derecha en PC, Centro en Móvil) -->
+        <div class="flex flex-col justify-center w-full max-w-md mx-auto md:ml-auto md:mr-0">
+            <form action="/login" method="POST" class="space-y-6 w-full">
+                <!-- Error message -->
+                <div id="loginError"
+                    class="hidden items-center gap-3 text-base text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-500/10 p-5 rounded-3xl border border-red-100 dark:border-red-500/20">
+                    <span class="material-symbols-outlined text-[24px]">error</span>
+                    <span class="font-bold">Credenciales inválidas</span>
+                </div>
+                <script>
+                    if (new URLSearchParams(window.location.search).get('error')) {
+                        document.getElementById('loginError').classList.remove('hidden');
+                        document.getElementById('loginError').classList.add('flex');
+                    }
+                </script>
+
+                <!-- Campo de correo -->
+                <div class="space-y-3">
+                    <label
+                        class="text-base md:text-lg font-bold text-gray-700 dark:text-gray-300 ml-1 uppercase tracking-wider">Correo
+                        electrónico</label>
+                    <div class="relative">
+                        <span
+                            class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-2xl">mail</span>
+                        <input name="email" type="email" required
+                            class="w-full pl-14 pr-4 py-6 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-[2rem] focus:border-melo focus:ring-2 focus:ring-melo/20 transition-all text-lg placeholder:text-gray-400 font-medium"
+                            placeholder="tu@email.com" autocomplete="username email">
+                    </div>
+                </div>
+
+                <!-- Campo de contraseña -->
+                <div class="space-y-3">
+                    <label
+                        class="text-base md:text-lg font-bold text-gray-700 dark:text-gray-300 ml-1 uppercase tracking-wider">Contraseña</label>
+                    <div class="relative">
+                        <span
+                            class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-2xl">lock</span>
+                        <input name="password" type="password" required
+                            class="w-full pl-14 pr-12 py-6 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-[2rem] focus:border-melo focus:ring-2 focus:ring-melo/20 transition-all text-lg placeholder:text-gray-400 font-medium"
+                            placeholder="••••••••" autocomplete="current-password">
+                        <button type="button" onclick="togglePassword(this)"
+                            class="absolute right-6 top-1/2 -translate-y-1/2 text-gray-400 hover:text-melo transition-colors">
+                            <span class="material-symbols-outlined text-2xl">visibility</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Enlace de olvido y botón -->
+                <div class="flex justify-end">
+                    <a href="#"
+                        class="text-base text-melo hover:text-melo-dark font-bold underline underline-offset-4">¿Olvidaste
+                        tu contraseña?</a>
+                </div>
+
+                <!-- Botón principal -->
+                <button type="submit"
+                    class="w-full bg-melo text-white rounded-[2rem] py-6 font-black text-xl hover:bg-melo-dark active:scale-[0.98] transition-all mt-4 shadow-2xl shadow-melo/30 flex items-center justify-center gap-3">
+                    Entrar ahora
+                    <span class="material-symbols-outlined">arrow_forward</span>
+                </button>
+            </form>
+
+            <!-- Registro y footer móvil -->
+            <div class="mt-10 space-y-8">
+                <p class="text-center text-lg text-gray-600 dark:text-gray-300">
+                    ¿No tienes cuenta?
+                    <a href="/signup" class="text-melo font-black ml-1">Regístrate gratis</a>
+                </p>
+
+                <div class="flex items-center gap-4">
+                    <div class="flex-1 h-px bg-gray-200 dark:bg-gray-800"></div>
+                    <span class="text-[10px] text-gray-400 dark:text-gray-600 font-black tracking-[0.2em]">SISTEMA MELO
+                        FINANCE</span>
+                    <div class="flex-1 h-px bg-gray-200 dark:bg-gray-800"></div>
+                </div>
+
+                <!-- Badges de confianza -->
+                <div class="flex justify-center gap-6">
+                    <div class="flex items-center gap-2 text-[10px] text-gray-500 font-black uppercase tracking-widest">
+                        <span class="material-symbols-outlined text-[20px] text-melo">verified_user</span>
+                        SSL
+                    </div>
+                    <div class="flex items-center gap-2 text-[10px] text-gray-500 font-black uppercase tracking-widest">
+                        <span class="material-symbols-outlined text-[20px] text-melo">lock_person</span>
+                        Encriptado
+                    </div>
+                </div>
+
+                <p class="text-center text-xs text-gray-400 dark:text-gray-600 font-medium">
+                    © 2026 Melo Finance · Venezuela
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function togglePassword(btn) {
+            const input = btn.previousElementSibling;
+            const icon = btn.querySelector('.material-symbols-outlined');
+            const type = input.type === 'password' ? 'text' : 'password';
+            input.type = type;
+            icon.textContent = type === 'password' ? 'visibility' : 'visibility_off';
+        }
+    </script>
+</body>
+
+</html>
