@@ -132,13 +132,23 @@
                 </a>
             </div>
         </div>
-        <!-- Greeting -->
-        <div class="px-6 py-8 md:py-12">
-            <h2 class="text-3xl md:text-6xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
-                ¡Hola, <span class="text-primary italic">{{ user.nombre or 'Usuario' }}</span>!
-            </h2>
-            <p class="text-base md:text-2xl text-slate-400 font-medium mt-2">Gestiona tu cartera de préstamos de manera
-                inteligente.</p>
+        <!-- Greeting & Actions -->
+        <div class="px-6 py-8 md:py-12 flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div>
+                <h2 class="text-3xl md:text-6xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
+                    ¡Hola, <span class="text-primary italic">{{ user.nombre or 'Usuario' }}</span>!
+                </h2>
+                <p class="text-base md:text-2xl text-slate-400 font-medium mt-2">Gestiona tu cartera de préstamos de
+                    manera inteligente.</p>
+            </div>
+
+            <div class="flex gap-3">
+                <a href="/analytics/report"
+                    class="flex items-center gap-2 px-6 py-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-700 dark:text-white font-bold hover:bg-slate-50 transition-all shadow-sm">
+                    <span class="material-symbols-outlined">picture_as_pdf</span>
+                    <span>Descargar Reporte PDF</span>
+                </a>
+            </div>
         </div>
 
         <div class="md:grid md:grid-cols-2 md:gap-6 md:px-6">
@@ -250,76 +260,93 @@
                 </div>
             </div>
 
-            <!-- Performance Chart (Derecha en PC) -->
-            <div class="px-4 mt-6 md:mt-6 pb-28 md:pb-8 md:col-span-5">
-                <div
-                    class="bg-white dark:bg-slate-900 p-6 md:p-8 rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-800 h-full flex flex-col">
-                    <div class="flex items-center justify-between mb-8">
-                        <p class="text-slate-900 dark:text-slate-100 font-black uppercase tracking-widest text-sm">
-                            Rendimiento Mensual</p>
-                        <span class="material-symbols-outlined text-slate-400">more_horiz</span>
-                    </div>
-                    <!-- Dynamic Bar Chart -->
-                    <div class="flex flex-1 items-end justify-between h-48 px-2 gap-3">
-                        {% for item in grafico_data %}
-                        <div class="flex-1 flex flex-col items-center gap-1 group/bar">
-                            <div class="w-full bg-primary/20 rounded-t-xl relative transition-all duration-500 hover:bg-primary"
-                                style="height: {{ item.height if item.height > 8 else 8 }}%">
-                                <div
-                                    class="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-3 py-1.5 rounded-lg opacity-0 group-hover/bar:opacity-100 transition-opacity whitespace-nowrap font-bold shadow-xl">
-                                    {{ item.label }}: {{ item.height }}%
+            <!-- Ads & Performance Section -->
+            <div class="md:grid md:grid-cols-12 md:gap-6 md:px-6">
+                <!-- Performance Chart (Izquierda en PC) -->
+                <div class="px-4 mt-6 md:mt-6 pb-8 md:col-span-8">
+                    <div
+                        class="bg-white dark:bg-slate-900 p-6 md:p-8 rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-800 h-full flex flex-col">
+                        <div class="flex items-center justify-between mb-8">
+                            <p class="text-slate-900 dark:text-slate-100 font-black uppercase tracking-widest text-sm">
+                                Rendimiento Mensual</p>
+                            <span class="material-symbols-outlined text-slate-400">more_horiz</span>
+                        </div>
+                        <!-- Dynamic Bar Chart -->
+                        <div class="flex flex-1 items-end justify-between h-48 px-2 gap-3">
+                            {% for item in grafico_data %}
+                            <div class="flex-1 flex flex-col items-center gap-1 group/bar">
+                                <div class="w-full bg-primary/20 rounded-t-xl relative transition-all duration-500 hover:bg-primary"
+                                    style="height: {{ item.height if item.height > 8 else 8 }}%">
+                                    <div
+                                        class="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-3 py-1.5 rounded-lg opacity-0 group-hover/bar:opacity-100 transition-opacity whitespace-nowrap font-bold shadow-xl">
+                                        {{ item.label }}: {{ item.height }}%
+                                    </div>
                                 </div>
                             </div>
+                            {% endfor %}
                         </div>
-                        {% endfor %}
+                        <div class="flex justify-between mt-4 text-[10px] text-slate-400 font-black uppercase px-1">
+                            {% for item in grafico_data %}
+                            <span class="flex-1 text-center">{{ item.label[:3] }}</span>
+                            {% endfor %}
+                        </div>
                     </div>
-                    <div class="flex justify-between mt-4 text-[10px] text-slate-400 font-black uppercase px-1">
-                        {% for item in grafico_data %}
-                        <span class="flex-1 text-center">{{ item.label[:3] }}</span>
-                        {% endfor %}
+                </div>
+
+                <!-- Ads Slot (Derecha en PC) -->
+                <div class="px-4 mt-6 md:mt-6 pb-28 md:pb-8 md:col-span-4">
+                    <div
+                        class="bg-slate-50 dark:bg-slate-800/50 rounded-[2rem] border-2 border-dashed border-slate-200 dark:border-slate-700 h-full flex flex-col items-center justify-center p-8 text-center">
+                        <div
+                            class="size-16 bg-slate-200 dark:bg-slate-700 rounded-full flex items-center justify-center mb-4">
+                            <span class="material-symbols-outlined text-slate-400">ads_click</span>
+                        </div>
+                        <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Espacio Publicitario
+                        </p>
+                        <p class="text-slate-500 dark:text-slate-400 text-xs font-medium">Prepara aquí tus anuncios de
+                            AdSense para monetizar tu flujo.</p>
                     </div>
                 </div>
             </div>
+            <!-- Bottom Navigation Bar -->
+            <div
+                class="fixed bottom-0 md:bottom-6 left-0 right-0 flex max-w-md md:max-w-3xl lg:max-w-5xl mx-auto gap-2 border-t md:border border-slate-200 dark:border-slate-700 md:rounded-3xl md:shadow-2xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-4 pb-6 pt-2 md:py-2 z-40 transition-all">
+                <a class="flex flex-1 md:flex-row flex-col items-center justify-center gap-2 md:gap-3 text-primary md:hover:bg-primary/5 md:py-3 md:rounded-xl transition-colors"
+                    href="/dashboard">
+                    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+                    <p class="text-[10px] md:text-sm font-bold leading-normal tracking-tight">Dashboard</p>
+                </a>
+                <a class="flex flex-1 md:flex-row flex-col items-center justify-center gap-2 md:gap-3 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors md:hover:bg-primary/5 md:py-3 md:rounded-xl"
+                    href="/clients">
+                    <span class="material-symbols-outlined">group</span>
+                    <p class="text-[10px] md:text-sm font-medium leading-normal tracking-tight">Clientes</p>
+                </a>
+                <a class="flex flex-1 md:flex-row flex-col items-center justify-center gap-2 md:gap-3 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors md:hover:bg-primary/5 md:py-3 md:rounded-xl"
+                    href="/loans">
+                    <span class="material-symbols-outlined">account_balance_wallet</span>
+                    <p class="text-[10px] md:text-sm font-medium leading-normal tracking-tight">Préstamos</p>
+                </a>
+                <a class="flex flex-1 md:flex-row flex-col items-center justify-center gap-2 md:gap-3 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors md:hover:bg-primary/5 md:py-3 md:rounded-xl"
+                    href="/settings/profile">
+                    <span class="material-symbols-outlined">settings</span>
+                    <p class="text-[10px] md:text-sm font-medium leading-normal tracking-tight">Ajustes</p>
+                </a>
+            </div>
         </div>
-        <!-- Bottom Navigation Bar -->
-        <div
-            class="fixed bottom-0 md:bottom-6 left-0 right-0 flex max-w-md md:max-w-3xl lg:max-w-5xl mx-auto gap-2 border-t md:border border-slate-200 dark:border-slate-700 md:rounded-3xl md:shadow-2xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-4 pb-6 pt-2 md:py-2 z-40 transition-all">
-            <a class="flex flex-1 md:flex-row flex-col items-center justify-center gap-2 md:gap-3 text-primary md:hover:bg-primary/5 md:py-3 md:rounded-xl transition-colors"
-                href="/dashboard">
-                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dashboard</span>
-                <p class="text-[10px] md:text-sm font-bold leading-normal tracking-tight">Dashboard</p>
-            </a>
-            <a class="flex flex-1 md:flex-row flex-col items-center justify-center gap-2 md:gap-3 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors md:hover:bg-primary/5 md:py-3 md:rounded-xl"
-                href="/clients">
-                <span class="material-symbols-outlined">group</span>
-                <p class="text-[10px] md:text-sm font-medium leading-normal tracking-tight">Clientes</p>
-            </a>
-            <a class="flex flex-1 md:flex-row flex-col items-center justify-center gap-2 md:gap-3 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors md:hover:bg-primary/5 md:py-3 md:rounded-xl"
-                href="/loans">
-                <span class="material-symbols-outlined">account_balance_wallet</span>
-                <p class="text-[10px] md:text-sm font-medium leading-normal tracking-tight">Préstamos</p>
-            </a>
-            <a class="flex flex-1 md:flex-row flex-col items-center justify-center gap-2 md:gap-3 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors md:hover:bg-primary/5 md:py-3 md:rounded-xl"
-                href="/settings/profile">
-                <span class="material-symbols-outlined">settings</span>
-                <p class="text-[10px] md:text-sm font-medium leading-normal tracking-tight">Ajustes</p>
-            </a>
-        </div>
-    </div>
-    <script>
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('sidebar-overlay');
-            sidebar.classList.toggle('-translate-x-full');
-            overlay.classList.toggle('hidden');
-        }
+        <script>
+            function toggleSidebar() {
+                const sidebar = document.getElementById('sidebar');
+                const overlay = document.getElementById('sidebar-overlay');
+                sidebar.classList.toggle('-translate-x-full');
+                overlay.classList.toggle('hidden');
+            }
 
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/static/sw.js');
-            });
-        }
-    </script>
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('/static/sw.js');
+                });
+            }
+        </script>
 </body>
 
 </html>

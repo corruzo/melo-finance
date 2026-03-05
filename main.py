@@ -15,6 +15,7 @@ from scraper import update_bcv_rate_if_needed
 import utils
 from datetime import datetime, timedelta
 from sqlalchemy import func
+import analytics_engine
 
 # --- Seguridad ---
 _SECRET_KEY_FALLBACK = "melo-finance-secret-key-change-in-production"
@@ -835,3 +836,36 @@ def create_loan(loan: schemas.LoanCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(db_loan)
     return db_loan
+
+@app.get("/analytics/report")
+def analytics_report(db: Session = Depends(get_db), current_user: User = Depends(require_user)):
+    """Genera un reporte PDF de la cartera actual."""
+    loans = db.query(Loan).join(Client).filter(Client.user_id == current_user.id, Loan.estatus == 'activo').all()
+    
+    loans_data = []
+    for l in loans:
+        loans_data.append({
+            "cliente": l.client.nombre,
+            "monto": f"{l.monto_original:,.2f}",
+            "moneda": l.moneda,
+            "estatus": l.estatus.capitalize(),
+            "vencimiento": l.fecha_vencimiento.strftime("%d/%m/%Y") if l.fecha_vencimiento else "N/A"
+        })
+    
+    total_stats = {
+        "usd": f"{current_user.capital_total_usd:,.2f}",
+        "ves": f"{current_user.capital_total_ves:,.2f}",
+        "active_count": len(loans)
+    }
+    
+    pdf_bytes = analytics_engine.generate_loan_report(
+        f"{current_user.nombre} {current_user.apellido}",
+        loans_data,
+        total_stats
+    )
+    
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=Reporte_Melo_{datetime.now().strftime('%Y%m%d')}.pdf"}
+    )
