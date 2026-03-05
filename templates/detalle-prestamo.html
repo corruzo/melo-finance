@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport" />
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Melo Finance">
+    <meta name="theme-color" content="#043dae">
+    <title>Melo Finance - Detalle Préstamo</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#043dae",
+                        "melo-dark": "#032d82",
+                        "background-light": "#f5f6f8",
+                        "background-dark": "#0f1623",
+                    },
+                    fontFamily: { "display": ["Manrope", "sans-serif"] },
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            overscroll-behavior-y: contain;
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen">
+    <div
+        class="relative flex min-h-screen w-full flex-col max-w-5xl mx-auto bg-white dark:bg-slate-900 md:shadow-2xl md:border-x border-slate-200 dark:border-slate-800">
+        <!-- Header -->
+        <header
+            class="flex items-center justify-between p-4 sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-100 dark:border-slate-800">
+            <button onclick="window.location.href='/loans'"
+                class="text-slate-900 dark:text-slate-100 flex size-10 shrink-0 items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
+                <span class="material-symbols-outlined">arrow_back</span>
+            </button>
+            <div class="flex-1 flex flex-col items-center">
+                <h2
+                    class="text-primary italic font-black text-2xl md:text-3xl tracking-tight leading-none pointer-events-none">
+                    Melo
+                    <span class="text-slate-900 dark:text-white not-italic">Finance</span>
+                </h2>
+                <p class="text-[10px] md:text-sm text-slate-400 uppercase font-black tracking-[0.2em] mt-1">Detalle del
+                    Préstamo</p>
+            </div>
+            <div class="size-10"></div>
+        </header>
+
+        <main class="flex-1 p-4 md:p-8 space-y-6 pb-32">
+            <!-- Loan Card -->
+            <div
+                class="relative overflow-hidden p-8 rounded-[2.5rem] bg-primary text-white shadow-2xl shadow-primary/20">
+                <div class="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+
+                <div class="relative z-10">
+                    <div class="flex items-center justify-between mb-8">
+                        <div>
+                            <p class="text-white/60 text-[10px] font-black uppercase tracking-widest mb-1">Cliente</p>
+                            <h3 class="text-2xl font-black">{{ loan.client.nombre }}</h3>
+                        </div>
+                        <div class="px-4 py-2 bg-white/10 rounded-xl backdrop-blur-md border border-white/20">
+                            <span class="text-xs font-black uppercase tracking-widest">{{ loan.estatus }}</span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-8">
+                        <div>
+                            <p class="text-white/60 text-[10px] font-black uppercase tracking-widest mb-1">Deuda
+                                Pendiente</p>
+                            <h4 class="text-3xl font-black">
+                                {{ "$" if loan.moneda == "USD" else "Bs." }} {{ (deuda_pendiente * (tasa_actual if
+                                loan.moneda == 'VES' else 1))|format_currency }}
+                            </h4>
+                            {% if loan.moneda == 'VES' %}
+                            <p class="text-white/40 text-[10px] mt-1 italic">Vínculo: ${{
+                                deuda_pendiente|format_currency }}</p>
+                            {% endif %}
+                        </div>
+                        <div class="text-right">
+                            <p class="text-white/60 text-[10px] font-black uppercase tracking-widest mb-1">Monto
+                                Original</p>
+                            <p class="text-xl font-bold">
+                                {{ "$" if loan.moneda == "USD" else "Bs." }} {{ loan.monto_original|format_currency }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Details Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div
+                    class="p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Condiciones</p>
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-slate-500 font-medium">Interés</span>
+                            <span class="text-sm font-black text-primary">{{ loan.porcentaje_interes }}%</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-slate-500 font-medium">Frecuencia</span>
+                            <span class="text-sm font-black text-slate-900 dark:text-white capitalize">{{
+                                loan.frecuencia_pagos }}</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-slate-500 font-medium">Cuotas</span>
+                            <span class="text-sm font-black text-slate-900 dark:text-white">{{ loan.cuotas_totales
+                                }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div
+                    class="p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Fechas</p>
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-slate-500 font-medium">Inicio</span>
+                            <span class="text-sm font-black text-slate-900 dark:text-white">{{
+                                loan.fecha_inicio.strftime('%d/%m/%Y') }}</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-slate-500 font-medium">Vencimiento</span>
+                            <span class="text-sm font-black text-slate-900 dark:text-white">
+                                {{ loan.fecha_vencimiento.strftime('%d/%m/%Y') if loan.fecha_vencimiento else 'N/A' }}
+                            </span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-slate-500 font-medium">Creado</span>
+                            <span class="text-sm font-black text-slate-900 dark:text-white">{{
+                                loan.fecha_creacion.strftime('%d/%m/%Y') }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notes -->
+            {% if loan.notas %}
+            <div class="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Notas</p>
+                <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed italic">{{ loan.notas }}</p>
+            </div>
+            {% endif %}
+
+            <!-- Transaction History -->
+            <div>
+                <h4 class="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-4 px-2">Historial de
+                    Transacciones</h4>
+                <div
+                    class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 overflow-hidden">
+                    {% for t in loan.transactions %}
+                    <div
+                        class="p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                        <div class="flex items-center gap-3">
+                            <div
+                                class="size-10 rounded-xl {% if t.tipo == 'pago_cuota' %}bg-emerald-500/10 text-emerald-500{% else %}bg-slate-100 dark:bg-slate-800 text-slate-400{% endif %} flex items-center justify-center">
+                                <span class="material-symbols-outlined text-xl">
+                                    {% if t.tipo == 'pago_cuota' %}payments{% elif t.tipo == 'egreso_capital' %}upload{%
+                                    else %}sync{% endif %}
+                                </span>
+                            </div>
+                            <div>
+                                <p class="text-xs font-black text-slate-900 dark:text-white capitalize">{{
+                                    t.tipo.replace('_', ' ') }}</p>
+                                <p class="text-[10px] font-bold text-slate-400">{{ t.fecha.strftime('%d/%m/%y %H:%M') }}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p
+                                class="text-sm font-black {% if t.tipo == 'pago_cuota' %}text-emerald-500{% else %}text-slate-400{% endif %}">
+                                {% if t.tipo == 'pago_cuota' %}+{% else %}-{% endif %} {{ "$" if t.moneda == "USD" else
+                                "Bs." }} {{ t.monto_real|format_currency }}
+                            </p>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="p-12 text-center text-slate-400 text-sm italic">
+                        No hay movimientos registrados
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </main>
+
+        <!-- Bottom Navigation Bar -->
+        <div
+            class="fixed bottom-0 md:bottom-6 left-0 right-0 flex max-w-md md:max-w-3xl lg:max-w-5xl mx-auto gap-2 border-t md:border border-slate-200 dark:border-slate-700 md:rounded-3xl md:shadow-2xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-4 pb-6 pt-2 md:py-2 z-50 transition-all">
+            <a class="flex flex-1 md:flex-row flex-col items-center justify-center gap-2 md:gap-3 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors md:hover:bg-primary/5 md:py-3 md:rounded-xl"
+                href="/dashboard">
+                <span class="material-symbols-outlined">dashboard</span>
+                <p class="text-[10px] md:text-sm font-medium leading-normal tracking-tight">Dashboard</p>
+            </a>
+            <a class="flex flex-1 md:flex-row flex-col items-center justify-center gap-2 md:gap-3 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors md:hover:bg-primary/5 md:py-3 md:rounded-xl"
+                href="/clients">
+                <span class="material-symbols-outlined">group</span>
+                <p class="text-[10px] md:text-sm font-medium leading-normal tracking-tight">Clientes</p>
+            </a>
+            <a class="flex flex-1 md:flex-row flex-col items-center justify-center gap-2 md:gap-3 text-primary md:hover:bg-primary/5 md:py-3 md:rounded-xl transition-colors"
+                href="/loans">
+                <span class="material-symbols-outlined"
+                    style="font-variation-settings: 'FILL' 1;">account_balance_wallet</span>
+                <p class="text-[10px] md:text-sm font-bold leading-normal tracking-tight">Préstamos</p>
+            </a>
+            <a class="flex flex-1 md:flex-row flex-col items-center justify-center gap-2 md:gap-3 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors md:hover:bg-primary/5 md:py-3 md:rounded-xl"
+                href="/settings/profile">
+                <span class="material-symbols-outlined">settings</span>
+                <p class="text-[10px] md:text-sm font-medium leading-normal tracking-tight">Ajustes</p>
+            </a>
+        </div>
+    </div>
+</body>
+
+</html>

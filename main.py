@@ -256,11 +256,20 @@ def movements_history_view(request: Request, db: Session = Depends(get_db), curr
     # Formatear para una vista unificada
     movements = []
     for t in loan_trans:
+        titulo = f"Pago: {t.loan.client.nombre}"
+        tipo_mov = "entrada"
+        if t.tipo == "egreso_capital":
+            titulo = f"Préstamo a: {t.loan.client.nombre}"
+            tipo_mov = "salida"
+        elif t.tipo == "ingreso_extra":
+            titulo = f"Ajuste/Anulación: {t.loan.client.nombre}"
+            tipo_mov = "entrada"
+
         movements.append({
             "fecha": t.fecha,
-            "titulo": f"Pago: {t.loan.client.nombre}",
+            "titulo": titulo,
             "monto": t.monto,
-            "tipo_ui": "entrada" if t.tipo in ["pago_cuota", "ingreso_extra"] else "salida",
+            "tipo_ui": tipo_mov,
             "categoria": "Préstamo"
         })
     for t in cap_trans:
@@ -292,6 +301,7 @@ def loans_history_view(request: Request, db: Session = Depends(get_db), current_
         formatted_loans.append({
             "id": l.id,
             "client": l.client,
+            "cliente_id": l.client.id,
             "monto_principal": monto_display,
             "moneda": l.moneda,
             "fecha_creacion": l.fecha_creacion,
@@ -339,6 +349,7 @@ def loans_hub(request: Request, db: Session = Depends(get_db), current_user: Use
         loan_list.append({
             "id": l.id,
             "cliente": l.client.nombre,
+            "cliente_id": l.client.id,
             "monto": monto_display,
             "deuda": deuda_display,
             "atraso": utils.chequear_cuota_vencida(l),
@@ -414,6 +425,24 @@ def client_detail(request: Request, client_id: int, db: Session = Depends(get_db
         "request": request,
         "client": client,
         "active_loans": active_loans,
+        "unread_count": unread_count
+    })
+
+@app.get("/loans/{loan_id}", response_class=HTMLResponse)
+def loan_detail(request: Request, loan_id: int, db: Session = Depends(get_db), current_user: User = Depends(require_user)):
+    loan = db.query(Loan).join(Client).filter(Loan.id == loan_id, Client.user_id == current_user.id).first()
+    if not loan:
+        raise HTTPException(status_code=404, detail="Préstamo no encontrado")
+    
+    tasa_actual = update_bcv_rate_if_needed(db)
+    deuda_pendiente = utils.obtener_deuda_pendiente(loan)
+    
+    unread_count = db.query(Notification).filter(Notification.user_id == current_user.id, Notification.leida == False).count()
+    return templates.TemplateResponse("detalle-prestamo.html", {
+        "request": request,
+        "loan": loan,
+        "tasa_actual": tasa_actual,
+        "deuda_pendiente": deuda_pendiente,
         "unread_count": unread_count
     })
 
@@ -563,6 +592,18 @@ def new_loan_post(
 
     db.commit()
     
+    # Registrar la salida de capital en el historial de transacciones
+    monto_usd_egreso = monto_principal if moneda == "USD" else monto_base_db
+    egreso_trans = Transaction(
+        loan_id=new_loan.id,
+        tipo='egreso_capital',
+        monto=monto_usd_egreso,
+        monto_real=monto_principal,
+        moneda=moneda
+    )
+    db.add(egreso_trans)
+    db.commit()
+
     crear_alerta(db, current_user.id, "Préstamo Otorgado", f"Préstamo registrado para {client.nombre}.", "success")
     return RedirectResponse(url="/loans", status_code=status.HTTP_303_SEE_OTHER)
 
@@ -573,26 +614,42 @@ def capital_settings_get(request: Request, current_user: User = Depends(require_
 
 @app.post("/settings/capital")
 def capital_settings_post(
-    capital_usd: float = Form(0.0), 
-    capital_ves: float = Form(0.0), 
+    capital_usd: float = Form(None), 
+    capital_ves: float = Form(None), 
+    ajuste_usd: float = Form(0.0),
+    ajuste_ves: float = Form(0.0),
     db: Session = Depends(get_db), 
     current_user: User = Depends(require_user)
 ):
-    """Configura el capital dual."""
+    """Configura el capital dual o realiza ajustes relativos."""
     user = current_user
     if user:
-        # USD
-        dif_usd = capital_usd - user.capital_total_usd
-        if dif_usd != 0:
-            ct = CapitalTransaction(user_id=user.id, tipo="inversion" if dif_usd > 0 else "retiro", monto=abs(dif_usd), moneda="USD")
+        # Ajustes relativos (Suma/Resta)
+        if ajuste_usd != 0:
+            user.capital_total_usd += ajuste_usd
+            ct = CapitalTransaction(user_id=user.id, tipo="inversion" if ajuste_usd > 0 else "retiro", monto=abs(ajuste_usd), moneda="USD")
             db.add(ct)
-            user.capital_total_usd = capital_usd
-        # VES
-        dif_ves = capital_ves - user.capital_total_ves
-        if dif_ves != 0:
-            ct = CapitalTransaction(user_id=user.id, tipo="inversion" if dif_ves > 0 else "retiro", monto=abs(dif_ves), moneda="VES")
+        
+        if ajuste_ves != 0:
+            user.capital_total_ves += ajuste_ves
+            ct = CapitalTransaction(user_id=user.id, tipo="inversion" if ajuste_ves > 0 else "retiro", monto=abs(ajuste_ves), moneda="VES")
             db.add(ct)
-            user.capital_total_ves = capital_ves
+
+        # Ajustes directos (si se enviaron valores en los inputs de "Total")
+        if capital_usd is not None and ajuste_usd == 0:
+            dif_usd = capital_usd - user.capital_total_usd
+            if dif_usd != 0:
+                ct = CapitalTransaction(user_id=user.id, tipo="inversion" if dif_usd > 0 else "retiro", monto=abs(dif_usd), moneda="USD")
+                db.add(ct)
+                user.capital_total_usd = capital_usd
+        
+        if capital_ves is not None and ajuste_ves == 0:
+            dif_ves = capital_ves - user.capital_total_ves
+            if dif_ves != 0:
+                ct = CapitalTransaction(user_id=user.id, tipo="inversion" if dif_ves > 0 else "retiro", monto=abs(dif_ves), moneda="VES")
+                db.add(ct)
+                user.capital_total_ves = capital_ves
+        
         db.commit()
     return RedirectResponse(url="/settings/profile", status_code=status.HTTP_303_SEE_OTHER)
 
@@ -644,6 +701,17 @@ def cancel_loan(
         db.query(User).filter(User.id == current_user.id).update({User.capital_total_ves: User.capital_total_ves + (deuda * tasa)})
     
     loan.estatus = 'anulado'
+    
+    # Registrar devolución de capital
+    reintegro_trans = Transaction(
+        loan_id=loan.id,
+        tipo='ingreso_extra',
+        monto=deuda if loan.moneda == "USD" else deuda, # deuda ya está en base-USD si el helper así lo hace
+        monto_real=deuda if loan.moneda == "USD" else (deuda * update_bcv_rate_if_needed(db)),
+        moneda=loan.moneda
+    )
+    db.add(reintegro_trans)
+    
     db.commit()
     crear_alerta(db, current_user.id, "Préstamo Anulado", f"El préstamo de {loan.client.nombre} fue anulado. Capital devuelto al fondo.", "alert")
     return RedirectResponse(url="/loans", status_code=status.HTTP_303_SEE_OTHER)

@@ -192,55 +192,60 @@
                 <div class="grid grid-cols-2 gap-4">
                     <!-- Active Loans Indicator -->
                     <div
-                        class="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800">
+                        class="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
                         <div class="size-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
                             <span class="material-symbols-outlined text-primary text-2xl">payments</span>
                         </div>
-                        <p class="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">
+                        <p
+                            class="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1 truncate">
                             Préstamos Activos</p>
-                        <p class="text-slate-900 dark:text-slate-100 text-2xl font-black">{{ total_prestamos_activos }}
+                        <p class="text-slate-900 dark:text-slate-100 text-2xl font-black truncate">{{
+                            total_prestamos_activos }}
                         </p>
-                        <div class="mt-3 flex items-center gap-1 text-[10px] text-red-500 font-bold">
-                            <span class="material-symbols-outlined text-xs">warning</span>
+                        <div class="mt-3 flex items-center gap-1 text-[10px] text-red-500 font-bold truncate">
+                            <span class="material-symbols-outlined text-[10px]">warning</span>
                             <span>{{ prestamos_vencidos }} atrasados</span>
                         </div>
                     </div>
                     <!-- Projected Profits Indicator -->
                     <div
-                        class="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800">
+                        class="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
                         <div class="size-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center mb-4">
                             <span class="material-symbols-outlined text-emerald-500 text-2xl">trending_up</span>
                         </div>
-                        <p class="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">
+                        <p
+                            class="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1 truncate">
                             Ganan. Reales</p>
-                        <p class="text-slate-900 dark:text-slate-100 text-2xl font-black">${{
+                        <p class="text-slate-900 dark:text-slate-100 text-xl md:text-2xl font-black truncate">${{
                             "%.2f"|format(ganancias_reales)
                             }}</p>
-                        <span class="text-[10px] text-emerald-500 font-bold">Intereses Cobrados</span>
+                        <span class="text-[10px] text-emerald-500 font-bold truncate">Intereses Cobrados</span>
                     </div>
                     <!-- Money Out (Lent) Indicator -->
                     <div
-                        class="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800">
+                        class="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
                         <div class="size-12 rounded-2xl bg-orange-500/10 flex items-center justify-center mb-4">
                             <span class="material-symbols-outlined text-orange-500 text-2xl">upload</span>
                         </div>
-                        <p class="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">
+                        <p
+                            class="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1 truncate">
                             Dinero Prestado</p>
-                        <p class="text-slate-900 dark:text-slate-100 text-2xl font-black">${{
+                        <p class="text-slate-900 dark:text-slate-100 text-xl md:text-2xl font-black truncate">${{
                             capital_prestado_usd|format_currency }}</p>
-                        <span class="text-[10px] text-slate-400 font-medium">Capital en calle</span>
+                        <span class="text-[10px] text-slate-400 font-medium truncate">Capital en calle</span>
                     </div>
                     <!-- Projected Indicator -->
                     <div
-                        class="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800">
+                        class="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
                         <div class="size-12 rounded-2xl bg-blue-500/10 flex items-center justify-center mb-4">
                             <span class="material-symbols-outlined text-blue-500 text-2xl">analytics</span>
                         </div>
-                        <p class="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">
+                        <p
+                            class="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1 truncate">
                             Interés Proyect.</p>
-                        <p class="text-slate-900 dark:text-slate-100 text-2xl font-black">${{
+                        <p class="text-slate-900 dark:text-slate-100 text-xl md:text-2xl font-black truncate">${{
                             ganancias_proyectadas|format_currency }}</p>
-                        <span class="text-[10px] text-slate-400 font-medium">Por cobrar</span>
+                        <span class="text-[10px] text-slate-400 font-medium truncate">Por cobrar</span>
                     </div>
                 </div>
             </div>
@@ -259,7 +264,7 @@
                         {% for item in grafico_data %}
                         <div class="flex-1 flex flex-col items-center gap-1 group/bar">
                             <div class="w-full bg-primary/20 rounded-t-xl relative transition-all duration-500 hover:bg-primary"
-                                style="height: {{ [item.height, 8]|max }}%">
+                                style="height: {{ item.height if item.height > 8 else 8 }}%">
                                 <div
                                     class="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-3 py-1.5 rounded-lg opacity-0 group-hover/bar:opacity-100 transition-opacity whitespace-nowrap font-bold shadow-xl">
                                     {{ item.label }}: {{ item.height }}%

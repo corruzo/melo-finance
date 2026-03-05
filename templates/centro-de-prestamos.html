@@ -145,10 +145,11 @@
                         {{ vencidos }}</p>
                 </div>
                 <div
-                    class="bg-slate-50 dark:bg-slate-800 p-5 rounded-3xl border border-slate-100 dark:border-slate-800 text-center flex flex-col justify-center">
-                    <p class="text-[10px] md:text-xs uppercase font-black text-slate-400 mb-1 tracking-widest">Por
+                    class="bg-slate-50 dark:bg-slate-800 p-5 rounded-3xl border border-slate-100 dark:border-slate-800 text-center flex flex-col justify-center overflow-hidden">
+                    <p class="text-[10px] md:text-xs uppercase font-black text-slate-400 mb-1 tracking-widest truncate">
+                        Por
                         Cobrar</p>
-                    <p class="text-2xl md:text-4xl font-black text-slate-900 dark:text-white">${{
+                    <p class="text-xl md:text-3xl font-black text-slate-900 dark:text-white truncate">${{
                         total_prestado|format_currency }}
                     </p>
                 </div>
@@ -197,20 +198,26 @@
                                         {% if l.atraso %}warning{% else %}verified_user{% endif %}
                                     </span>
                                 </div>
-                                <div onclick="window.location.href='/clients/{{ l.cliente_id }}'"
-                                    class="cursor-pointer">
-                                    <h4 class="font-black text-base text-slate-900 dark:text-white">{{ l.cliente }}
+                                <div onclick="window.location.href='/loans/{{ l.id }}'"
+                                    class="cursor-pointer group-hover:opacity-80 transition-opacity">
+                                    <h4 class="font-black text-base text-slate-900 dark:text-white leading-tight">{{
+                                        l.cliente }}
                                     </h4>
-                                    <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Saldo: {{
-                                        "$" if l.moneda == "USD" else "Bs." }} {{ l.deuda|format_currency }}</p>
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+                                        Saldo: {{ "$" if l.moneda == "USD" else "Bs." }} {{ l.deuda|format_currency }}
+                                    </p>
                                 </div>
                             </div>
                             <div class="flex items-center gap-2">
                                 <button
                                     onclick="openPaymentModal('{{ l.id }}', '{{ l.cliente }}', '{{ l.moneda }}', '{{ l.deuda }}')"
-                                    class="flex h-12 px-6 items-center justify-center rounded-2xl bg-primary text-white text-xs font-black tracking-widest hover:bg-melo-dark transition-all shadow-lg shadow-primary/20 hover:scale-[1.02]">
+                                    class="flex h-12 px-6 items-center justify-center rounded-2xl bg-primary text-white text-[10px] font-black tracking-widest hover:bg-melo-dark transition-all shadow-lg shadow-primary/20 hover:scale-[1.02] uppercase">
                                     <span class="material-symbols-outlined text-sm mr-2">payments</span> COBRAR
                                 </button>
+                                <a href="/clients/{{ l.cliente_id }}"
+                                    class="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-50 dark:bg-slate-800 text-slate-400 hover:text-primary transition-all">
+                                    <span class="material-symbols-outlined text-sm">person</span>
+                                </a>
                                 <form action="/loans/{{ l.id }}/cancel" method="POST"
                                     onsubmit="return confirm('¿Anular este préstamo? El capital pendiente será devuelto a tu fondo.')">
                                     <button type="submit"

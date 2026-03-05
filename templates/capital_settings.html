@@ -69,39 +69,64 @@
                 </div>
 
                 <form method="POST" action="/settings/capital" class="flex-1 space-y-6">
-                    <div class="space-y-4">
-                        <div
-                            class="bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm border border-slate-100 dark:border-slate-700">
-                            <label class="block">
-                                <span
-                                    class="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 ml-1">Capital
-                                    en Dólares (USD)</span>
-                                <div class="mt-2 flex items-center">
-                                    <span
-                                        class="material-symbols-outlined text-slate-400 mr-2 text-[20px]">attach_money</span>
+                    <div class="space-y-6">
+                        <!-- USD Section -->
+                        <div class="space-y-3">
+                            <label
+                                class="block text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Capital
+                                Dólares (USD)</label>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div
+                                    class="bg-slate-50 dark:bg-slate-800 rounded-2xl p-4 border border-slate-100 dark:border-slate-700">
+                                    <span class="text-[10px] font-bold text-slate-400 block mb-1">Total Actual</span>
                                     <input name="capital_usd" type="number" step="0.01"
                                         value="{{ user.capital_total_usd }}"
-                                        class="block w-full border-0 p-0 text-slate-900 dark:text-white placeholder-slate-400 bg-transparent focus:ring-0 text-2xl font-bold"
-                                        placeholder="0.00" required inputmode="decimal">
+                                        class="w-full bg-transparent border-none p-0 text-xl font-black text-slate-900 dark:text-white focus:ring-0"
+                                        placeholder="0.00">
                                 </div>
-                            </label>
+                                <div class="bg-primary/5 dark:bg-primary/10 rounded-2xl p-4 border border-primary/20">
+                                    <span class="text-[10px] font-bold text-primary block mb-1">Abonar/Retirar
+                                        (+/-)</span>
+                                    <input name="ajuste_usd" type="number" step="0.01" value="0"
+                                        class="w-full bg-transparent border-none p-0 text-xl font-black text-primary focus:ring-0"
+                                        placeholder="0.00">
+                                </div>
+                            </div>
                         </div>
 
-                        <div
-                            class="bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm border border-slate-100 dark:border-slate-700">
-                            <label class="block">
-                                <span
-                                    class="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 ml-1">Capital
-                                    en Bolívares (VES)</span>
-                                <div class="mt-2 flex items-center">
-                                    <span
-                                        class="material-symbols-outlined text-slate-400 mr-2 text-[20px]">payments</span>
+                        <!-- VES Section -->
+                        <div class="space-y-3">
+                            <label
+                                class="block text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Capital
+                                Bolívares (VES)</label>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div
+                                    class="bg-slate-50 dark:bg-slate-800 rounded-2xl p-4 border border-slate-100 dark:border-slate-700">
+                                    <span class="text-[10px] font-bold text-slate-400 block mb-1">Total Actual</span>
                                     <input name="capital_ves" type="number" step="0.01"
                                         value="{{ user.capital_total_ves }}"
-                                        class="block w-full border-0 p-0 text-slate-900 dark:text-white placeholder-slate-400 bg-transparent focus:ring-0 text-2xl font-bold"
-                                        placeholder="0.00" required inputmode="decimal">
+                                        class="w-full bg-transparent border-none p-0 text-xl font-black text-slate-900 dark:text-white focus:ring-0"
+                                        placeholder="0.00">
                                 </div>
-                            </label>
+                                <div class="bg-primary/5 dark:bg-primary/10 rounded-2xl p-4 border border-primary/20">
+                                    <span class="text-[10px] font-bold text-primary block mb-1">Abonar/Retirar
+                                        (+/-)</span>
+                                    <input name="ajuste_ves" type="number" step="0.01" value="0"
+                                        class="w-full bg-transparent border-none p-0 text-xl font-black text-primary focus:ring-0"
+                                        placeholder="0.00">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div
+                        class="bg-blue-50 dark:bg-blue-500/10 p-4 rounded-2xl border border-blue-100 dark:border-blue-500/20 mb-6">
+                        <div class="flex gap-3">
+                            <span class="material-symbols-outlined text-blue-500">info</span>
+                            <p class="text-xs text-blue-700 dark:text-blue-300 leading-tight">
+                                Puedes editar el <b>Total Actual</b> directamente o usar el campo <b>Abonar/Retirar</b>
+                                para sumar o restar al capital existente (ej: 20 o -20).
+                            </p>
                         </div>
                     </div>
 
