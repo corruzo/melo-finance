@@ -49,6 +49,11 @@ if not os.path.exists("./static"):
     os.makedirs("./static")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+# Directorio de subidas (archivos de préstamos)
+UPLOAD_DIR = os.path.join("static", "uploads")
+if not os.path.exists(UPLOAD_DIR):
+    os.makedirs(UPLOAD_DIR)
+
 # Templates (Stitch)
 if not os.path.exists("./templates"):
     os.makedirs("./templates")
@@ -445,79 +450,12 @@ def client_detail(request: Request, client_id: int, db: Session = Depends(get_db
         "unread_count": unread_count
     })
 
-@app.get("/loans/{loan_id}", response_class=HTMLResponse)
-def loan_detail(request: Request, loan_id: int, db: Session = Depends(get_db), current_user: User = Depends(require_user)):
-    loan = db.query(Loan).join(Client).filter(Loan.id == loan_id, Client.user_id == current_user.id).first()
-    if not loan:
-        raise HTTPException(status_code=404, detail="Préstamo no encontrado")
-    
-    tasa_actual = update_bcv_rate_if_needed(db)
-    deuda_pendiente = utils.obtener_deuda_pendiente(loan)
-    
-    unread_count = db.query(Notification).filter(Notification.user_id == current_user.id, Notification.leida == False).count()
-    return templates.TemplateResponse("detalle-prestamo.html", {
-        "request": request,
-        "loan": loan,
-        "tasa_actual": tasa_actual,
-        "deuda_pendiente": deuda_pendiente,
-        "unread_count": unread_count
-    })
-
-@app.get("/clients/{client_id}/edit", response_class=HTMLResponse)
-def edit_client_get(request: Request, client_id: int, db: Session = Depends(get_db), current_user: User = Depends(require_user)):
-    client = db.query(Client).filter(Client.id == client_id, Client.user_id == current_user.id).first()
-    if not client:
-        raise HTTPException(status_code=404, detail="Cliente no encontrado")
-    unread_count = db.query(Notification).filter(Notification.user_id == current_user.id, Notification.leida == False).count()
-    return templates.TemplateResponse("editar-cliente.html", {"request": request, "client": client, "unread_count": unread_count})
-
-@app.post("/clients/{client_id}/edit")
-def edit_client_post(
-    client_id: int,
-    nombre: str = Form(...),
-    cedula: str = Form(None),
-    telefono: str = Form(None),
-    direccion: str = Form(None),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(require_user)
-):
-    client = db.query(Client).filter(Client.id == client_id, Client.user_id == current_user.id).first()
-    if not client:
-        raise HTTPException(status_code=404, detail="Cliente no encontrado")
-    
-    client.nombre = nombre
-    client.cedula = cedula or ""
-    client.telefono = telefono or ""
-    client.direccion = direccion or ""
-    db.commit()
-    
-    crear_alerta(db, current_user.id, "Cliente Actualizado", f"Los datos de {nombre} han sido modificados.", "info")
-    return RedirectResponse(url=f"/clients/{client_id}", status_code=status.HTTP_303_SEE_OTHER)
-
-@app.post("/clients/{client_id}/delete")
-def delete_client(client_id: int, db: Session = Depends(get_db), current_user: User = Depends(require_user)):
-    client = db.query(Client).filter(Client.id == client_id, Client.user_id == current_user.id).first()
-    if not client:
-        raise HTTPException(status_code=404, detail="Cliente no encontrado")
-    
-    # Optional: Check if tiene préstamos activos? User said "repara las funciones", let's just let them delete.
-    db.delete(client)
-    db.commit()
-    
-    crear_alerta(db, current_user.id, "Cliente Eliminado", f"Se ha borrado el registro del cliente.", "alert")
-    return RedirectResponse(url="/clients", status_code=status.HTTP_303_SEE_OTHER)
-
 @app.get("/loans/new", response_class=HTMLResponse)
 def new_loan_get(request: Request, db: Session = Depends(get_db), current_user: User = Depends(require_user)):
     tasa_actual = update_bcv_rate_if_needed(db)
     clients = db.query(Client).filter(Client.user_id == current_user.id).all()
     unread_count = db.query(Notification).filter(Notification.user_id == current_user.id, Notification.leida == False).count()
     return templates.TemplateResponse("formulario-de-prestamo.html", {"request": request, "tasa_actual": tasa_actual, "clients": clients, "unread_count": unread_count, "user": current_user})
-
-# Asegurar que el directorio de uploads existe
-UPLOAD_DIR = os.path.join("static", "uploads")
-if not os.path.exists(UPLOAD_DIR):
-    os.makedirs(UPLOAD_DIR)
 
 @app.post("/loans/new")
 def new_loan_post(
@@ -625,6 +563,69 @@ def new_loan_post(
 
     crear_alerta(db, current_user.id, "Préstamo Otorgado", f"Préstamo registrado para {client.nombre}.", "success")
     return RedirectResponse(url="/loans", status_code=status.HTTP_303_SEE_OTHER)
+
+@app.get("/loans/{loan_id}", response_class=HTMLResponse)
+def loan_detail(request: Request, loan_id: int, db: Session = Depends(get_db), current_user: User = Depends(require_user)):
+    loan = db.query(Loan).join(Client).filter(Loan.id == loan_id, Client.user_id == current_user.id).first()
+    if not loan:
+        raise HTTPException(status_code=404, detail="Préstamo no encontrado")
+    
+    tasa_actual = update_bcv_rate_if_needed(db)
+    deuda_pendiente = utils.obtener_deuda_pendiente(loan)
+    
+    unread_count = db.query(Notification).filter(Notification.user_id == current_user.id, Notification.leida == False).count()
+    return templates.TemplateResponse("detalle-prestamo.html", {
+        "request": request,
+        "loan": loan,
+        "tasa_actual": tasa_actual,
+        "deuda_pendiente": deuda_pendiente,
+        "unread_count": unread_count
+    })
+
+@app.get("/clients/{client_id}/edit", response_class=HTMLResponse)
+def edit_client_get(request: Request, client_id: int, db: Session = Depends(get_db), current_user: User = Depends(require_user)):
+    client = db.query(Client).filter(Client.id == client_id, Client.user_id == current_user.id).first()
+    if not client:
+        raise HTTPException(status_code=404, detail="Cliente no encontrado")
+    unread_count = db.query(Notification).filter(Notification.user_id == current_user.id, Notification.leida == False).count()
+    return templates.TemplateResponse("editar-cliente.html", {"request": request, "client": client, "unread_count": unread_count})
+
+@app.post("/clients/{client_id}/edit")
+def edit_client_post(
+    client_id: int,
+    nombre: str = Form(...),
+    cedula: str = Form(None),
+    telefono: str = Form(None),
+    direccion: str = Form(None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_user)
+):
+    client = db.query(Client).filter(Client.id == client_id, Client.user_id == current_user.id).first()
+    if not client:
+        raise HTTPException(status_code=404, detail="Cliente no encontrado")
+    
+    client.nombre = nombre
+    client.cedula = cedula or ""
+    client.telefono = telefono or ""
+    client.direccion = direccion or ""
+    db.commit()
+    
+    crear_alerta(db, current_user.id, "Cliente Actualizado", f"Los datos de {nombre} han sido modificados.", "info")
+    return RedirectResponse(url=f"/clients/{client_id}", status_code=status.HTTP_303_SEE_OTHER)
+
+@app.post("/clients/{client_id}/delete")
+def delete_client(client_id: int, db: Session = Depends(get_db), current_user: User = Depends(require_user)):
+    client = db.query(Client).filter(Client.id == client_id, Client.user_id == current_user.id).first()
+    if not client:
+        raise HTTPException(status_code=404, detail="Cliente no encontrado")
+    
+    # Optional: Check if tiene préstamos activos? User said "repara las funciones", let's just let them delete.
+    db.delete(client)
+    db.commit()
+    
+    crear_alerta(db, current_user.id, "Cliente Eliminado", f"Se ha borrado el registro del cliente.", "alert")
+    return RedirectResponse(url="/clients", status_code=status.HTTP_303_SEE_OTHER)
+
 
 @app.get("/settings/capital", response_class=HTMLResponse)
 def capital_settings_get(request: Request, current_user: User = Depends(require_user)):
