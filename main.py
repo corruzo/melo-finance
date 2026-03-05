@@ -395,9 +395,22 @@ def new_client_post(
     db.add(db_client)
     db.commit()
     
-    crear_alerta(db, current_user.id, "Nuevo Cliente", f"Has registrado a {nombre} en el directorio.", "success")
-    
     return RedirectResponse(url="/clients", status_code=status.HTTP_303_SEE_OTHER)
+
+@app.post("/clients/", response_model=schemas.ClientResponse)
+def clients_post(client: schemas.ClientCreate, db: Session = Depends(get_db), current_user: User = Depends(require_user)):
+    """API para creación rápida de clientes (JSON)."""
+    db_client = Client(
+        nombre=client.nombre,
+        cedula=client.cedula or "",
+        telefono=client.telefono or "",
+        direccion=client.direccion or "",
+        user_id=current_user.id
+    )
+    db.add(db_client)
+    db.commit()
+    db.refresh(db_client)
+    return db_client
 
 @app.get("/clients/{client_id}", response_class=HTMLResponse)
 def client_detail(request: Request, client_id: int, db: Session = Depends(get_db), current_user: User = Depends(require_user)):
@@ -523,6 +536,15 @@ def new_loan_post(
 
     tasa = update_bcv_rate_if_needed(db)
     
+    # 1. Validar capital ANTES de crear nada
+    if moneda == "USD":
+        if current_user.capital_total_usd < monto_principal:
+            return RedirectResponse(url="/loans/new?error=capital_usd", status_code=status.HTTP_303_SEE_OTHER)
+    else:
+        if current_user.capital_total_ves < monto_principal:
+            return RedirectResponse(url="/loans/new?error=capital_ves", status_code=status.HTTP_303_SEE_OTHER)
+
+    # 2. Preparar fechas
     start_date = None
     if fecha_inicio:
         try:
@@ -539,11 +561,16 @@ def new_loan_post(
         except:
             end_date = None
 
-    # Lógica de Indexación: Si es en bolívares, guardamos el monto principal en USD como base
+    # 3. Calcular montos base
     monto_base_db = monto_principal
     if moneda == "VES":
         monto_base_db = monto_principal / tasa
 
+    # Asegurar cuotas mínimas
+    if cuotas < 1:
+        cuotas = 1
+
+    # 4. Crear préstamo
     new_loan = Loan(
         client_id=client_id,
         monto_principal=monto_base_db,
@@ -562,37 +589,23 @@ def new_loan_post(
     db.commit()
     db.refresh(new_loan)
     
-    # Manejar subida de archivos
+    # 5. Manejar subida de archivos
     for upload_file in archivos:
         if upload_file.filename:
-            # Crear nombre único para evitar colisiones
             unique_filename = f"loan_{new_loan.id}_{datetime.now().timestamp()}_{upload_file.filename}"
             file_path = os.path.join(UPLOAD_DIR, unique_filename)
-            
             with open(file_path, "wb") as buffer:
                 shutil.copyfileobj(upload_file.file, buffer)
-            
-            # Guardar en base de datos
             attachment = LoanAttachment(loan_id=new_loan.id, file_path=f"/static/uploads/{unique_filename}")
             db.add(attachment)
     
-    # Validar capital disponible (redirigir con error en vez de crash)
+    # 6. Descontar capital
     if moneda == "USD":
-        if current_user.capital_total_usd < monto_principal:
-            db.delete(new_loan)  # revertir
-            db.commit()
-            return RedirectResponse(url="/loans/new?error=capital_usd", status_code=status.HTTP_303_SEE_OTHER)
         db.query(User).filter(User.id == current_user.id).update({User.capital_total_usd: User.capital_total_usd - monto_principal})
     else:
-        if current_user.capital_total_ves < monto_principal:
-            db.delete(new_loan)
-            db.commit()
-            return RedirectResponse(url="/loans/new?error=capital_ves", status_code=status.HTTP_303_SEE_OTHER)
         db.query(User).filter(User.id == current_user.id).update({User.capital_total_ves: User.capital_total_ves - monto_principal})
 
-    db.commit()
-    
-    # Registrar la salida de capital en el historial de transacciones
+    # 7. Registrar transacciones y finalizar
     monto_usd_egreso = monto_principal if moneda == "USD" else monto_base_db
     egreso_trans = Transaction(
         loan_id=new_loan.id,
@@ -651,7 +664,7 @@ def capital_settings_post(
                 user.capital_total_ves = capital_ves
         
         db.commit()
-    return RedirectResponse(url="/settings/profile", status_code=status.HTTP_303_SEE_OTHER)
+    return RedirectResponse(url="/dashboard", status_code=status.HTTP_303_SEE_OTHER)
 
 @app.get("/settings/profile", response_class=HTMLResponse)
 def profile_settings_get(request: Request, db: Session = Depends(get_db), current_user: User = Depends(require_user)):

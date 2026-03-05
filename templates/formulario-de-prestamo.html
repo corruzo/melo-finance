@@ -482,15 +482,17 @@
             </div>
         </form>
 
-        <!-- Script to sync both buttons -->
+        <!-- Script to sync both buttons and handle errors -->
         <script>
             document.addEventListener('DOMContentLoaded', () => {
-                const btnDesktop = document.getElementById('submitBtnDesktop');
-                const btnMobile = document.getElementById('submitBtnMobile');
-                const form = document.querySelector('form');
-
-                // We need to handle state for both buttons in calculateSummary
-                // I will update the function below
+                const urlParams = new URLSearchParams(window.location.search);
+                const error = urlParams.get('error');
+                if (error) {
+                    let msg = "Error al procesar el préstamo.";
+                    if (error === 'capital_usd') msg = "No tienes suficiente capital en USD.";
+                    if (error === 'capital_ves') msg = "No tienes suficiente capital en VES.";
+                    alert(msg);
+                }
             });
         </script>
         <script>
