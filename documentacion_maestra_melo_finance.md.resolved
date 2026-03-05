@@ -1,0 +1,80 @@
+# Documentación Técnica y Legal: Melo Finance
+
+Este documento resume la identidad, arquitectura, seguridad y aspectos legales 
+del sistema **Melo Finance**. Este reporte sirve como manual maestro para el 
+propietario del sistema.
+
+---
+
+## 1. Identidad del Sistema
+*   **Nombre Oficial:** Melo Finance - Sistema de Gestión Crediticia Bimoneda.
+*   **Versión Actual:** 1.0.0 (Despliegue en la Nube / Cloud Ready).
+*   **Propósito:** Gestión de préstamos indexados, control de capital dual 
+(USD/VES) y automatización de cobranzas.
+
+---
+
+## 2. Ficha Técnica (Stack Tecnológico)
+*   **Lenguaje de Programación:** Python 3.10+
+*   **Framework Web:** FastAPI (Asincrónico, alto rendimiento).
+*   **Base de Datos Relacional:** 
+    *   *Local:* SQLite (para desarrollo).
+    *   *Producción:* PostgreSQL (alojado en Railway/Neon).
+*   **Interfaz de Usuario (Frontend):** 
+    *   HTML5 semántico.
+    *   Tailwind CSS (Diseño responsivo y premium).
+    *   Tipografía: 'Outfit' (Google Fonts).
+*   **Automatización:** Scraper integrado para obtención de tasa oficial BCV (Banco Central de Venezuela).
+
+---
+
+## 3. Arquitectura del Despliegue (Hosting)
+
+*   **Plataforma de Aplicación:** [Railway.app](https://railway.app/)
+*   **Control de Versiones:** [GitHub](https://github.com/corruzo/melo-finance) (Repositorio Privado).
+*   **Variables de Entorno (Claves Maestras):**
+    *   `DATABASE_URL`: postgresql://neondb_owner:npg_8TWg0mklGCqw@ep-bitter-bonus-ai18jj9s-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+    *   `MELO_SECRET_KEY`: melo-2024-seguro
+*   **Comando de Inicio:** `uvicorn main:app --host 0.0.0.0 --port $PORT`
+
+---
+
+## 4. Seguridad y Protección de Datos
+*   **Cifrado de Contraseñas:** El sistema utiliza **bcrypt** con sal (salt) aleatoria por cada usuario. Las contraseñas nunca se guardan en texto plano.
+*   **Manejo de Sesiones:** Utiliza **JWT (JSON Web Tokens)** firmados con la `MELO_SECRET_KEY`. Las sesiones caducan automáticamente tras 30 días de inactividad.
+*   **Validación de Capital:** Lógica backend que impide la creación de préstamos sin liquidez real verificada en la base de datos.
+*   **Protección de Archivos:** Soporte para adjuntos multimedia (respaldos de préstamos) almacenados de forma segura vinculados al ID del préstamo.
+
+---
+
+## 5. Procesos Operativos Clave
+### 5.1. Flujo de Préstamo
+1.  Registro de Capital Inicial (USD/VES) en el módulo de Ajustes.
+2.  Alta de Cliente con datos de contacto verificados.
+3.  Simulación en tiempo real: Cálculo de intereses simple/compuesto según frecuencia (Diaria, Semanal, Quincenal, Mensual).
+4.  Generación de Cotización: Posibilidad de compartir presupuesto vía WhatsApp.
+5.  Desembolso: El sistema descuenta automáticamente el monto del capital disponible.
+
+### 5.2. Actualización de Tasas
+El sistema ejecuta automáticamente un proceso de "scraping" al iniciar sesión. Si la tasa del BCV no ha sido registrada para el día actual, el sistema la extrae y la guarda para que todos los cálculos de deuda en Bolívares sean precisos.
+
+---
+
+## 6. Consideraciones Legales y de Uso
+> [!IMPORTANT]
+> **Aviso de Responsabilidad:** Melo Finance es una herramienta tecnológica para la organización de finanzas. El usuario es el único responsable del cumplimiento de las leyes de usura, impuestos y regulaciones financieras de su jurisdicción local (ej. Ley de Instituciones del Sector Bancario en Venezuela).
+
+### Sugerencias de Términos para el Deudor:
+*   **Indexación:** Los préstamos en Bolívares están referenciados a la tasa oficial del día del pago (Snapshot BCV).
+*   **Mora:** El sistema registra movimientos, pero el propietario debe aplicar las notas manuales sobre intereses de mora según lo acordado verbal o legalmente.
+*   **Privacidad:** Los datos de los clientes (Teléfonos, Cédulas) son privados y residen en la base de datos personal del propietario.
+
+---
+
+## 7. Credenciales de Acceso (Resumen)
+*   **URL de Acceso:** [Tu link generado por Railway]
+*   **Admin Inicial:** El usuario administrador configurado durante la primera ejecución.
+*   **Soporte Técnico:** Mantenido por el sistema Antigravity a solicitud del usuario.
+
+---
+**Generado el:** 05 de Marzo de 2026.

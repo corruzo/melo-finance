@@ -127,9 +127,9 @@
                 </div>
             </header>
             <!-- Main Content Area -->
-            <main class="flex-1 flex flex-col md:flex-row gap-6 md:gap-8 p-4 md:p-8 overflow-y-auto">
+            <main class="flex-1 flex flex-col lg:flex-row gap-6 lg:gap-8 p-4 md:p-8 overflow-y-auto">
                 <!-- Left Column: Form Fields -->
-                <div class="flex-1 space-y-6 md:space-y-8 max-w-2xl mx-auto md:mx-0 w-full">
+                <div class="flex-1 space-y-6 md:space-y-8 max-w-2xl mx-auto lg:mx-0 w-full pb-32 lg:pb-8">
                     <!-- 1. Moneda -->
                     <div class="space-y-2">
                         <div class="flex p-1 bg-slate-200 dark:bg-slate-800 rounded-xl">
@@ -346,13 +346,13 @@
                     </div>
 
                     <!-- Right Column: Summary Card (Sticky) -->
-                    <div class="md:w-[400px] w-full">
-                        <div class="sticky top-0 space-y-6">
+                    <div class="lg:w-[400px] w-full">
+                        <div class="lg:sticky lg:top-8 space-y-6">
                             <div id="summaryCard"
                                 class="p-6 md:p-8 rounded-[2rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-2xl space-y-6 border-t-8 border-t-primary">
                                 <div>
-                                    <h3 class="text-sm font-black text-slate-400 uppercase tracking-widest mb-4">Resumen
-                                        de Cotización</h3>
+                                    <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">
+                                        Resumen de Cotización</h3>
                                     <div class="space-y-4">
                                         <div class="flex justify-between items-center">
                                             <span
@@ -412,6 +412,15 @@
                                 <p class="text-xs font-black uppercase tracking-wider leading-tight"
                                     id="capitalWarningText"></p>
                             </div>
+
+                            <!-- Desktop Submit (Visible only on LG up) -->
+                            <div class="hidden lg:block pt-4">
+                                <button type="submit" id="submitBtnDesktop"
+                                    class="w-full h-16 bg-primary hover:bg-primary/90 text-white font-black text-lg rounded-2xl shadow-2xl shadow-primary/30 flex items-center justify-center gap-3 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-widest">
+                                    <span class="material-symbols-outlined text-2xl">rocket_launch</span>
+                                    <span>Otorgar Préstamo</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -462,45 +471,28 @@
                 </div>
             </div>
 
-            <div class="h-32"></div>
-            <!-- Bottom Action Bar (Fixed on Mobile, part of flow maybe?) -->
+            <!-- Bottom Action Bar (Mobile Only) -->
             <div
-                class="sticky bottom-0 md:bg-transparent z-40 p-4 bg-white/90 dark:bg-background-dark/95 backdrop-blur-xl border-t md:border-t-0 border-slate-200 dark:border-slate-800 mt-auto md:max-w-xs md:ml-auto md:mr-8 md:mb-8">
-                <div class="flex flex-col gap-3 w-full">
-                    <button type="submit" id="submitBtn"
-                        class="w-full h-16 bg-primary hover:bg-primary/90 text-white font-black text-lg rounded-2xl shadow-2xl shadow-primary/30 flex items-center justify-center gap-3 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-widest">
-                        <span class="material-symbols-outlined text-2xl">rocket_launch</span>
-                        <span id="submitBtnText">Otorgar Préstamo</span>
-                    </button>
-                </div>
+                class="fixed bottom-0 left-0 right-0 z-[100] lg:hidden p-4 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-t border-slate-200 dark:border-slate-800 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.2)]">
+                <button type="submit" id="submitBtnMobile"
+                    class="w-full h-16 bg-primary hover:bg-primary/90 text-white font-black text-lg rounded-2xl shadow-2xl shadow-primary/30 flex items-center justify-center gap-3 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-widest">
+                    <span class="material-symbols-outlined text-2xl">rocket_launch</span>
+                    <span>Otorgar Préstamo</span>
+                </button>
             </div>
         </form>
 
-        <!-- Bottom Navigation Bar -->
-        <div
-            class="fixed bottom-0 md:bottom-6 left-0 right-0 flex max-w-md md:max-w-3xl lg:max-w-5xl mx-auto gap-2 border-t md:border border-slate-200 dark:border-slate-700 md:rounded-3xl md:shadow-2xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-4 pb-6 pt-2 md:py-2 z-50 transition-all">
-            <a class="flex flex-1 md:flex-row flex-col items-center justify-center gap-2 md:gap-3 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors md:hover:bg-primary/5 md:py-3 md:rounded-xl"
-                href="/dashboard">
-                <span class="material-symbols-outlined">dashboard</span>
-                <p class="text-[10px] md:text-sm font-medium leading-normal tracking-tight">Dashboard</p>
-            </a>
-            <a class="flex flex-1 md:flex-row flex-col items-center justify-center gap-2 md:gap-3 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors md:hover:bg-primary/5 md:py-3 md:rounded-xl"
-                href="/clients">
-                <span class="material-symbols-outlined">group</span>
-                <p class="text-[10px] md:text-sm font-medium leading-normal tracking-tight">Clientes</p>
-            </a>
-            <a class="flex flex-1 md:flex-row flex-col items-center justify-center gap-2 md:gap-3 text-primary md:hover:bg-primary/5 md:py-3 md:rounded-xl transition-colors"
-                href="/loans">
-                <span class="material-symbols-outlined"
-                    style="font-variation-settings: 'FILL' 1;">account_balance_wallet</span>
-                <p class="text-[10px] md:text-sm font-bold leading-normal tracking-tight">Préstamos</p>
-            </a>
-            <a class="flex flex-1 md:flex-row flex-col items-center justify-center gap-2 md:gap-3 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors md:hover:bg-primary/5 md:py-3 md:rounded-xl"
-                href="/settings/profile">
-                <span class="material-symbols-outlined">settings</span>
-                <p class="text-[10px] md:text-sm font-medium leading-normal tracking-tight">Ajustes</p>
-            </a>
-        </div>
+        <!-- Script to sync both buttons -->
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const btnDesktop = document.getElementById('submitBtnDesktop');
+                const btnMobile = document.getElementById('submitBtnMobile');
+                const form = document.querySelector('form');
+
+                // We need to handle state for both buttons in calculateSummary
+                // I will update the function below
+            });
+        </script>
         <script>
             // Set default dates
             const today = new Date();
@@ -639,7 +631,8 @@
                 // Validate Capital
                 const warningDiv = document.getElementById('capitalWarning');
                 const warningText = document.getElementById('capitalWarningText');
-                const submitBtn = document.getElementById('submitBtn');
+                const submitBtnDesktop = document.getElementById('submitBtnDesktop');
+                const submitBtnMobile = document.getElementById('submitBtnMobile');
 
                 let capitalSuficiente = true;
                 if (currency === 'USD') {
@@ -656,10 +649,12 @@
 
                 if (!capitalSuficiente) {
                     warningDiv.classList.remove('hidden');
-                    submitBtn.disabled = true;
+                    if (submitBtnDesktop) submitBtnDesktop.disabled = true;
+                    if (submitBtnMobile) submitBtnMobile.disabled = true;
                 } else {
                     warningDiv.classList.add('hidden');
-                    submitBtn.disabled = false;
+                    if (submitBtnDesktop) submitBtnDesktop.disabled = false;
+                    if (submitBtnMobile) submitBtnMobile.disabled = false;
                 }
 
                 // Enable/Disable Share Button
@@ -851,8 +846,9 @@
             calculateInstallments();
         </script>
         <!-- Bottom Navigation Bar -->
+        <!-- Main Navigation (Persistent bottom bar) -->
         <div
-            class="fixed bottom-0 md:bottom-6 left-0 right-0 flex max-w-md md:max-w-3xl lg:max-w-5xl mx-auto gap-2 border-t md:border border-slate-200 dark:border-slate-700 md:rounded-3xl md:shadow-2xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-4 pb-6 pt-2 md:py-2 z-50 transition-all">
+            class="fixed bottom-0 md:bottom-6 left-0 right-0 hidden lg:flex max-w-md md:max-w-3xl lg:max-w-5xl mx-auto gap-2 border-t md:border border-slate-200 dark:border-slate-700 md:rounded-3xl md:shadow-2xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-4 pb-6 pt-2 md:py-2 z-50 transition-all">
             <a class="flex flex-1 md:flex-row flex-col items-center justify-center gap-2 md:gap-3 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors md:hover:bg-primary/5 md:py-3 md:rounded-xl"
                 href="/dashboard">
                 <span class="material-symbols-outlined">dashboard</span>
