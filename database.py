@@ -121,6 +121,9 @@ class Notification(Base):
     user = relationship("User", backref="notifications")
 
 def init_db():
+    if os.environ.get("RESET_DATABASE") == "true":
+        print("DATABASE: Reseteando base de datos (RESET_DATABASE=true)...")
+        Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
 
 def get_db():
