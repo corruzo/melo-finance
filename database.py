@@ -12,9 +12,11 @@ if DATABASE_URL.startswith("postgres://"):
 
 # Configuración del motor
 if DATABASE_URL.startswith("sqlite"):
+    print("DATABASE: Usando SQLite local.")
     engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 else:
-    engine = create_engine(DATABASE_URL)
+    print(f"DATABASE: Conectando a {DATABASE_URL.split('@')[-1] if '@' in DATABASE_URL else 'remoto'}")
+    engine = create_engine(DATABASE_URL, pool_pre_ping=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
@@ -22,12 +24,14 @@ Base = declarative_base()
 class User(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
-    username = Column(String, unique=True, index=True) # Email/Login
+    username = Column(String, unique=True, index=True) 
     nombre = Column(String, nullable=True)
     apellido = Column(String, nullable=True)
     hashed_password = Column(String)
     capital_total_usd = Column(Float, default=0.0)
     capital_total_ves = Column(Float, default=0.0)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    last_login = Column(DateTime, nullable=True)
 
 class Client(Base):
     __tablename__ = "clients"
@@ -37,6 +41,8 @@ class Client(Base):
     telefono = Column(String)
     cedula = Column(String, nullable=True)
     direccion = Column(String)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     user = relationship("User", backref="clients")
     loans = relationship("Loan", back_populates="client")
@@ -46,23 +52,25 @@ class Rate(Base):
     id = Column(Integer, primary_key=True, index=True)
     fecha = Column(Date, unique=True, index=True)
     valor_bs_bcv = Column(Float)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 class Loan(Base):
     __tablename__ = "loans"
     id = Column(Integer, primary_key=True, index=True)
     client_id = Column(Integer, ForeignKey("clients.id"))
-    monto_principal = Column(Float) # Base USD indexada
-    monto_original = Column(Float, nullable=True) # Monto en la moneda solicitada originalmente
+    monto_principal = Column(Float) 
+    monto_original = Column(Float, nullable=True) 
     moneda = Column(String) # 'USD' o 'VES'
     tasa_bcv_snapshot = Column(Float)
     porcentaje_interes = Column(Float)
-    frecuencia_pagos = Column(String, default="mensual") # 'diario', 'semanal', 'quincenal', 'mensual'
+    frecuencia_pagos = Column(String, default="mensual") 
     cuotas_totales = Column(Integer, default=1)
     fecha_inicio = Column(Date, default=datetime.utcnow().date)
     fecha_vencimiento = Column(Date, nullable=True)
-    estatus = Column(String, default="activo") # 'activo', 'pagado', 'anulado'
+    estatus = Column(String, default="activo") 
     notas = Column(String, nullable=True)
     fecha_creacion = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     client = relationship("Client", back_populates="loans")
     transactions = relationship("Transaction", back_populates="loan")
@@ -73,6 +81,7 @@ class LoanAttachment(Base):
     id = Column(Integer, primary_key=True, index=True)
     loan_id = Column(Integer, ForeignKey("loans.id"))
     file_path = Column(String)
+    created_at = Column(DateTime, default=datetime.utcnow)
     
     loan = relationship("Loan", back_populates="attachments")
 
@@ -80,10 +89,10 @@ class Transaction(Base):
     __tablename__ = "transactions"
     id = Column(Integer, primary_key=True, index=True)
     loan_id = Column(Integer, ForeignKey("loans.id"))
-    tipo = Column(String) # 'pago_cuota', 'egreso_capital', 'ingreso_extra'
-    monto = Column(Float) # Monto normalizado (USD) para cálculos de deuda
-    monto_real = Column(Float, nullable=True) # Monto en la moneda original del pago
-    moneda = Column(String, default="USD") # Moneda del pago ('USD' o 'VES')
+    tipo = Column(String) 
+    monto = Column(Float) 
+    monto_real = Column(Float, nullable=True) 
+    moneda = Column(String, default="USD") 
     fecha = Column(DateTime, default=datetime.utcnow)
     
     loan = relationship("Loan", back_populates="transactions")
@@ -92,9 +101,9 @@ class CapitalTransaction(Base):
     __tablename__ = "capital_transactions"
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
-    tipo = Column(String) # 'inversion', 'retiro'
+    tipo = Column(String) 
     monto = Column(Float)
-    moneda = Column(String, default="USD") # 'USD' o 'VES'
+    moneda = Column(String, default="USD") 
     fecha = Column(DateTime, default=datetime.utcnow)
     
     user = relationship("User", backref="capital_transactions")
@@ -106,7 +115,7 @@ class Notification(Base):
     titulo = Column(String)
     mensaje = Column(String)
     fecha = Column(DateTime, default=datetime.utcnow)
-    tipo = Column(String, default="info") # 'info', 'alert', 'success'
+    tipo = Column(String, default="info") 
     leida = Column(Boolean, default=False)
     
     user = relationship("User", backref="notifications")

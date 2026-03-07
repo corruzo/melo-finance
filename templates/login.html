@@ -75,7 +75,7 @@
         .dark .wave-bg {
             background: linear-gradient(180deg, transparent 0%, rgba(4, 61, 174, 0.08) 100%);
         }
-    
+
         /* Prevención de parpadeo de modo oscuro */
         :root {
             --bg-light: #f5f6f8;
@@ -86,12 +86,12 @@
 </head>
 
 <body class="min-h-screen flex flex-col bg-white dark:bg-black relative overflow-x-hidden">
-<div class="absolute top-4 right-4 z-50">                <button type="button" onclick="toggleDarkMode()"
-                    class="flex size-10 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">
-                    <span class="material-symbols-outlined dark:hidden">dark_mode</span>
-                    <span class="material-symbols-outlined hidden dark:block">light_mode</span>
-                </button>
-</div>
+    <div class="absolute top-4 right-4 z-50"> <button type="button" onclick="toggleDarkMode()"
+            class="flex size-10 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">
+            <span class="material-symbols-outlined dark:hidden">dark_mode</span>
+            <span class="material-symbols-outlined hidden dark:block">light_mode</span>
+        </button>
+    </div>
     <!-- Fondo con gradiente dinámico -->
     <div
         class="fixed inset-0 bg-gradient-to-br from-melo/10 via-transparent to-transparent dark:from-melo/5 pointer-events-none">
@@ -117,6 +117,7 @@
         <!-- Sección Formulario (Derecha en PC, Centro en Móvil) -->
         <div class="flex flex-col justify-center w-full max-w-md mx-auto md:ml-auto md:mr-0">
             <form action="/login" method="POST" class="space-y-6 w-full">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                 <!-- Error message -->
                 <div id="loginError"
                     class="hidden items-center gap-3 text-base text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-500/10 p-5 rounded-3xl border border-red-100 dark:border-red-500/20">

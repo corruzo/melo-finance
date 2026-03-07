@@ -283,8 +283,7 @@
         <!-- ─────────────────────────────
              KPI CARDS
         ───────────────────────────── -->
-        <div class="px-6 py-4 grid grid-cols-2 md:grid-cols-4 gap-4">
-
+        <div class="px-6 py-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             <!-- KPI: Préstamos Activos -->
             <div
                 class="stat-card fade-in-up bg-white dark:bg-slate-900 rounded-[1.75rem] p-5 border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col gap-3">
@@ -308,7 +307,7 @@
                     <p class="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-1">En Calle</p>
                     <p class="text-2xl font-black text-slate-900 dark:text-white">${{
                         capital_prestado_usd|format_currency }}</p>
-                    <p class="text-[11px] font-medium text-slate-400 mt-1">USD</p>
+                    <p class="text-[11px] font-medium text-slate-400 mt-1">Total USD</p>
                 </div>
             </div>
 
@@ -322,7 +321,35 @@
                     <p class="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-1">Cobrado</p>
                     <p class="text-2xl font-black text-slate-900 dark:text-white">${{ "%.2f"|format(ganancias_reales) }}
                     </p>
-                    <p class="text-[11px] font-bold text-emerald-500 mt-1">Intereses reales</p>
+                    <p class="text-[11px] font-bold text-emerald-500 mt-1">Intereses</p>
+                </div>
+            </div>
+
+            <!-- KPI: Ticket Promedio -->
+            <div
+                class="stat-card fade-in-up bg-white dark:bg-slate-900 rounded-[1.75rem] p-5 border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col gap-3">
+                <div class="size-11 rounded-2xl bg-purple-500/10 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-purple-500 text-xl">avg_pace</span>
+                </div>
+                <div>
+                    <p class="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-1">Ticket Prom.</p>
+                    <p class="text-2xl font-black text-slate-900 dark:text-white">${{ promedio_prestamo|format_currency
+                        }}</p>
+                    <p class="text-[11px] font-medium text-slate-400 mt-1">Por préstamo</p>
+                </div>
+            </div>
+
+            <!-- KPI: Recaudación Mensual -->
+            <div
+                class="stat-card fade-in-up bg-white dark:bg-slate-900 rounded-[1.75rem] p-5 border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col gap-3">
+                <div class="size-11 rounded-2xl bg-blue-500/10 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-blue-500 text-xl">account_balance_wallet</span>
+                </div>
+                <div>
+                    <p class="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-1">Recaudado</p>
+                    <p class="text-2xl font-black text-slate-900 dark:text-white">${{ recaudacion_total|format_currency
+                        }}</p>
+                    <p class="text-[11px] font-medium text-slate-400 mt-1">Total Pagos</p>
                 </div>
             </div>
 

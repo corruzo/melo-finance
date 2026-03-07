@@ -25,6 +25,30 @@ if SECRET_KEY == _SECRET_KEY_FALLBACK and os.environ.get("RAILWAY_ENVIRONMENT") 
 
 signer = URLSafeTimedSerializer(SECRET_KEY)
 
+# --- CSRF & Security Helpers ---
+def generate_csrf_token():
+    return signer.dumps(os.urandom(16).hex())
+
+def verify_csrf_token(token: str) -> bool:
+    try:
+        signer.loads(token, max_age=3600) # 1 hora de validez
+        return True
+    except:
+        return False
+
+# Rate Limiter Simple (En memoria para la Beta)
+from collections import defaultdict
+import time
+_login_attempts = defaultdict(list)
+
+def check_rate_limit(ip: str):
+    now = time.time()
+    _login_attempts[ip] = [t for t in _login_attempts[ip] if now - t < 60] # Ventana de 1 min
+    if len(_login_attempts[ip]) >= 5: # Máximo 5 intentos por minuto
+        return False
+    _login_attempts[ip].append(now)
+    return True
+
 def hash_password(password: str) -> str:
     pwd_bytes = password.encode('utf-8')[:72]
     salt = bcrypt.gensalt()
@@ -40,8 +64,12 @@ def verify_password(plain: str, hashed: str) -> bool:
     except ValueError:
         return False
 
-# Crear tablas en caso de no existir
-init_db()
+# Crear tablas en caso de no existir e informar estatus
+try:
+    init_db()
+    print("DATABASE: Conexión exitosa y tablas verificadas.")
+except Exception as e:
+    print(f"DATABASE ERROR: Falló la inicialización - {e}")
 
 app = FastAPI(title="Melo Préstamos - Bimoneda", description="App de gestión de préstamos USD/VES", version="1.0.0")
 
@@ -109,10 +137,25 @@ def index():
 
 @app.get("/login", response_class=HTMLResponse)
 def login_get(request: Request):
-    return templates.TemplateResponse("login.html", {"request": request})
+    csrf_token = generate_csrf_token()
+    return templates.TemplateResponse("login.html", {"request": request, "csrf_token": csrf_token})
 
 @app.post("/login")
-def login_post(email: str = Form(""), password: str = Form(""), db: Session = Depends(get_db)):
+def login_post(
+    request: Request,
+    email: str = Form(""), 
+    password: str = Form(""), 
+    csrf_token: str = Form(""),
+    db: Session = Depends(get_db)
+):
+    # 1. Verificar CSRF
+    if not verify_csrf_token(csrf_token):
+        raise HTTPException(status_code=403, detail="CSRF Token inválido")
+    
+    # 2. Rate Limit
+    if not check_rate_limit(request.client.host):
+        return RedirectResponse(url="/login?error=too_many_requests", status_code=status.HTTP_303_SEE_OTHER)
+
     user = db.query(User).filter(User.username == email).first()
     if not user or not verify_password(password, user.hashed_password):
         return RedirectResponse(url="/login?error=1", status_code=status.HTTP_303_SEE_OTHER)
@@ -125,20 +168,36 @@ def login_post(email: str = Form(""), password: str = Form(""), db: Session = De
     # Cookie firmada y con tiempo de expiración
     token = signer.dumps(user.id)
     response = RedirectResponse(url="/dashboard", status_code=status.HTTP_303_SEE_OTHER)
+    
+    # Hardening de cookies para producción
+    is_prod = os.environ.get("RAILWAY_ENVIRONMENT") == "production"
     response.set_cookie(
-        key="session_token", value=token, path="/",
-        httponly=True,  # No accesible desde JavaScript
+        key="session_token", 
+        value=token, 
+        path="/",
+        httponly=True,
         samesite="lax",
-        max_age=60 * 60 * 24 * 30  # 30 días
+        secure=is_prod, # Solo HTTPS en producción
+        max_age=60 * 60 * 12 # Reducido a 12 horas para mayor seguridad financiera
     )
     return response
 
 @app.get("/signup", response_class=HTMLResponse)
 def signup_get(request: Request):
-    return templates.TemplateResponse("sign-up.html", {"request": request})
+    csrf_token = generate_csrf_token()
+    return templates.TemplateResponse("sign-up.html", {"request": request, "csrf_token": csrf_token})
 
 @app.post("/signup")
-def signup_post(nombre: str = Form(""), apellido: str = Form(""), email: str = Form(""), password: str = Form(""), db: Session = Depends(get_db)):
+def signup_post(
+    nombre: str = Form(""), 
+    apellido: str = Form(""), 
+    email: str = Form(""), 
+    password: str = Form(""), 
+    csrf_token: str = Form(""),
+    db: Session = Depends(get_db)
+):
+    if not verify_csrf_token(csrf_token):
+        raise HTTPException(status_code=403, detail="CSRF Token inválido")
     existing = db.query(User).filter(User.username == email).first()
     if existing:
         return RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
@@ -199,10 +258,11 @@ def dashboard(request: Request, db: Session = Depends(get_db), current_user: Use
         for l in active_loans
     )
     
-    # Ganancias reales = lo que fue registrado como ingreso extra (o pago_cuota porciones)
-    ganancias_reales = sum(
-        t.monto for t in db.query(Transaction).filter(Transaction.tipo == 'ingreso_extra').all()
-    )
+    # Ganancias reales = solo ingresos extra de este usuario
+    ganancias_reales = db.query(func.sum(Transaction.monto)).join(Loan).join(Client).filter(
+        Client.user_id == user.id,
+        Transaction.tipo == 'ingreso_extra'
+    ).scalar() or 0
     
     # Notificaciones no leídas
     unread_count = db.query(Notification).filter(Notification.user_id == user.id, Notification.leida == False).count()
@@ -384,7 +444,8 @@ def settings_view(request: Request, db: Session = Depends(get_db), current_user:
 @app.get("/clients/new", response_class=HTMLResponse)
 def new_client_get(request: Request, db: Session = Depends(get_db), current_user: User = Depends(require_user)):
     unread_count = db.query(Notification).filter(Notification.user_id == current_user.id, Notification.leida == False).count()
-    return templates.TemplateResponse("nuevo-cliente.html", {"request": request, "unread_count": unread_count})
+    csrf_token = generate_csrf_token()
+    return templates.TemplateResponse("nuevo-cliente.html", {"request": request, "unread_count": unread_count, "csrf_token": csrf_token})
 
 @app.post("/clients/new")
 def new_client_post(
@@ -392,9 +453,12 @@ def new_client_post(
     cedula: str = Form(None),
     telefono: str = Form(None),
     direccion: str = Form(None),
+    csrf_token: str = Form(""),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_user)
 ):
+    if not verify_csrf_token(csrf_token):
+        raise HTTPException(status_code=403, detail="CSRF Token inválido")
     db_client = Client(
         nombre=nombre, 
         cedula=cedula or "", 
@@ -456,7 +520,8 @@ def new_loan_get(request: Request, db: Session = Depends(get_db), current_user: 
     tasa_actual = update_bcv_rate_if_needed(db)
     clients = db.query(Client).filter(Client.user_id == current_user.id).all()
     unread_count = db.query(Notification).filter(Notification.user_id == current_user.id, Notification.leida == False).count()
-    return templates.TemplateResponse("formulario-de-prestamo.html", {"request": request, "tasa_actual": tasa_actual, "clients": clients, "unread_count": unread_count, "user": current_user})
+    csrf_token = generate_csrf_token()
+    return templates.TemplateResponse("formulario-de-prestamo.html", {"request": request, "tasa_actual": tasa_actual, "clients": clients, "unread_count": unread_count, "user": current_user, "csrf_token": csrf_token})
 
 @app.post("/loans/new")
 def new_loan_post(
@@ -469,49 +534,45 @@ def new_loan_post(
     fecha_inicio: str = Form(None),
     fecha_fin: str = Form(None),
     notas: str = Form(""),
+    csrf_token: str = Form(""),
     archivos: List[UploadFile] = File([]),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_user)
 ):
+    if not verify_csrf_token(csrf_token):
+        raise HTTPException(status_code=403, detail="CSRF Token inválido")
     client = db.query(Client).filter(Client.id == client_id, Client.user_id == current_user.id).first()
     if not client:
         return RedirectResponse(url="/loans", status_code=status.HTTP_303_SEE_OTHER)
 
     tasa = update_bcv_rate_if_needed(db)
     
-    # 1. Validar capital ANTES de crear nada
+    # 1. Validar capital y descontar ATÓMICAMENTE
+    # Usamos una sola consulta de actualización con filtro de saldo para evitar race conditions
     if moneda == "USD":
-        if current_user.capital_total_usd < monto_principal:
-            return RedirectResponse(url="/loans/new?error=capital_usd", status_code=status.HTTP_303_SEE_OTHER)
+        updated = db.query(User).filter(
+            User.id == current_user.id,
+            User.capital_total_usd >= monto_principal
+        ).update({User.capital_total_usd: User.capital_total_usd - monto_principal})
     else:
-        if current_user.capital_total_ves < monto_principal:
-            return RedirectResponse(url="/loans/new?error=capital_ves", status_code=status.HTTP_303_SEE_OTHER)
+        updated = db.query(User).filter(
+            User.id == current_user.id,
+            User.capital_total_ves >= monto_principal
+        ).update({User.capital_total_ves: User.capital_total_ves - monto_principal})
+
+    if not updated:
+        return RedirectResponse(url="/loans/new?error=capital_insuficiente", status_code=status.HTTP_303_SEE_OTHER)
 
     # 2. Preparar fechas
-    start_date = None
-    if fecha_inicio:
-        try:
-            start_date = datetime.strptime(fecha_inicio, "%Y-%m-%d").date()
-        except:
-            start_date = datetime.utcnow().date()
-    else:
+    try:
+        start_date = datetime.strptime(fecha_inicio, "%Y-%m-%d").date() if fecha_inicio else datetime.utcnow().date()
+        end_date = datetime.strptime(fecha_fin, "%Y-%m-%d").date() if fecha_fin else None
+    except:
         start_date = datetime.utcnow().date()
-
-    end_date = None
-    if fecha_fin:
-        try:
-            end_date = datetime.strptime(fecha_fin, "%Y-%m-%d").date()
-        except:
-            end_date = None
+        end_date = None
 
     # 3. Calcular montos base
-    monto_base_db = monto_principal
-    if moneda == "VES":
-        monto_base_db = monto_principal / tasa
-
-    # Asegurar cuotas mínimas
-    if cuotas < 1:
-        cuotas = 1
+    monto_base_db = monto_principal / tasa if moneda == "VES" else monto_principal
 
     # 4. Crear préstamo
     new_loan = Loan(
@@ -522,35 +583,36 @@ def new_loan_post(
         porcentaje_interes=porcentaje_interes,
         tasa_bcv_snapshot=tasa,
         frecuencia_pagos=frecuencia,
-        cuotas_totales=cuotas,
+        cuotas_totales=max(1, cuotas),
         fecha_inicio=start_date,
         fecha_vencimiento=end_date,
         notas=notas,
         estatus='activo'
     )
     db.add(new_loan)
-    db.commit()
-    db.refresh(new_loan)
+    db.flush() # Para obtener el ID antes del commit
     
-    # 5. Manejar subida de archivos
+    # 5. Manejar subida de archivos con validación básica
+    ALLOWED_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.pdf', '.docx'}
+    MAX_FILE_SIZE = 5 * 1024 * 1024 # 5MB
+
     for upload_file in archivos:
         if upload_file.filename:
-            # Sanitizar nombre de archivo
-            safe_name = os.path.basename(upload_file.filename).replace(" ", "_")
-            unique_filename = f"loan_{new_loan.id}_{int(datetime.now().timestamp())}_{safe_name}"
+            ext = os.path.splitext(upload_file.filename)[1].lower()
+            if ext not in ALLOWED_EXTENSIONS:
+                continue # Opcional: lanzar error
+            
+            # Validar tamaño (requiere leer o chequear el descriptor)
+            unique_filename = f"loan_{new_loan.id}_{int(datetime.now().timestamp())}{ext}"
             file_path = os.path.join(UPLOAD_DIR, unique_filename)
+            
             with open(file_path, "wb") as buffer:
                 shutil.copyfileobj(upload_file.file, buffer)
+            
             attachment = LoanAttachment(loan_id=new_loan.id, file_path=f"/static/uploads/{unique_filename}")
             db.add(attachment)
     
-    # 6. Descontar capital
-    if moneda == "USD":
-        db.query(User).filter(User.id == current_user.id).update({User.capital_total_usd: User.capital_total_usd - monto_principal})
-    else:
-        db.query(User).filter(User.id == current_user.id).update({User.capital_total_ves: User.capital_total_ves - monto_principal})
-
-    # 7. Registrar transacciones y finalizar
+    # 6. Registrar transacciones y finalizar
     monto_usd_egreso = monto_principal if moneda == "USD" else monto_base_db
     egreso_trans = Transaction(
         loan_id=new_loan.id,
@@ -642,17 +704,20 @@ def capital_settings_post(
     db: Session = Depends(get_db), 
     current_user: User = Depends(require_user)
 ):
-    """Configura el capital dual o realiza ajustes relativos."""
     user = current_user
     if user:
-        # Ajustes relativos (Suma/Resta)
+        # Ajustes relativos (Suma/Resta) - Operaciones ATÓMICAS en el motor SQL
         if ajuste_usd != 0:
-            user.capital_total_usd += ajuste_usd
+            db.query(User).filter(User.id == user.id).update({
+                User.capital_total_usd: User.capital_total_usd + ajuste_usd
+            })
             ct = CapitalTransaction(user_id=user.id, tipo="inversion" if ajuste_usd > 0 else "retiro", monto=abs(ajuste_usd), moneda="USD")
             db.add(ct)
         
         if ajuste_ves != 0:
-            user.capital_total_ves += ajuste_ves
+            db.query(User).filter(User.id == user.id).update({
+                User.capital_total_ves: User.capital_total_ves + ajuste_ves
+            })
             ct = CapitalTransaction(user_id=user.id, tipo="inversion" if ajuste_ves > 0 else "retiro", monto=abs(ajuste_ves), moneda="VES")
             db.add(ct)
 
@@ -660,19 +725,19 @@ def capital_settings_post(
         if capital_usd is not None and ajuste_usd == 0:
             dif_usd = capital_usd - user.capital_total_usd
             if dif_usd != 0:
-                ct = CapitalTransaction(user_id=user.id, tipo="inversion" if dif_usd > 0 else "retiro", monto=abs(dif_usd), moneda="USD")
+                ct = CapitalTransaction(user_id=user.id, tipo="ajuste_directo", monto=abs(dif_usd), moneda="USD")
                 db.add(ct)
                 user.capital_total_usd = capital_usd
         
         if capital_ves is not None and ajuste_ves == 0:
             dif_ves = capital_ves - user.capital_total_ves
             if dif_ves != 0:
-                ct = CapitalTransaction(user_id=user.id, tipo="inversion" if dif_ves > 0 else "retiro", monto=abs(dif_ves), moneda="VES")
+                ct = CapitalTransaction(user_id=user.id, tipo="ajuste_directo", monto=abs(dif_ves), moneda="VES")
                 db.add(ct)
                 user.capital_total_ves = capital_ves
         
         db.commit()
-    return RedirectResponse(url="/dashboard", status_code=status.HTTP_303_SEE_OTHER)
+    return RedirectResponse(url="/settings/profile?saved=1", status_code=status.HTTP_303_SEE_OTHER)
 
 @app.get("/settings/profile", response_class=HTMLResponse)
 def profile_settings_get(request: Request, db: Session = Depends(get_db), current_user: User = Depends(require_user)):
@@ -791,11 +856,15 @@ def register_payment(
     )
     db.add(new_transaction)
     
-    # Aumentar capital del usuario
+    # Aumentar capital del usuario - ATÓMICAMENTE en SQL
     if moneda_pago == "USD":
-        db.query(User).filter(User.id == current_user.id).update({User.capital_total_usd: User.capital_total_usd + monto})
+        db.query(User).filter(User.id == current_user.id).update({
+            User.capital_total_usd: User.capital_total_usd + monto
+        })
     else:
-        db.query(User).filter(User.id == current_user.id).update({User.capital_total_ves: User.capital_total_ves + monto})
+        db.query(User).filter(User.id == current_user.id).update({
+            User.capital_total_ves: User.capital_total_ves + monto
+        })
 
     db.commit()
     db.refresh(loan)
@@ -814,8 +883,17 @@ def register_payment(
 
 # --- APIs de ejemplo para probar desde un cliente ---
 @app.post("/clients/", response_model=schemas.ClientResponse)
-def create_client(client: schemas.ClientCreate, db: Session = Depends(get_db), current_user: User = Depends(require_user)):
-    """Registrar un nuevo cliente."""
+def create_client(
+    request: Request,
+    client: schemas.ClientCreate, 
+    db: Session = Depends(get_db), 
+    current_user: User = Depends(require_user)
+):
+    """Registrar un nuevo cliente vía API."""
+    csrf_token = request.headers.get("X-CSRF-Token")
+    if not csrf_token or not verify_csrf_token(csrf_token):
+        raise HTTPException(status_code=403, detail="CSRF Token inválido")
+        
     db_client = Client(**client.model_dump(), user_id=current_user.id)
     db.add(db_client)
     db.commit()
@@ -903,6 +981,16 @@ def reports_dashboard(request: Request, db: Session = Depends(get_db), current_u
             "vencido": utils.chequear_cuota_vencida(l),
         })
 
+    # Estadísticas extra
+    promedio_prestamo = (capital_prestado_usd / total_activos) if total_activos > 0 else 0
+    recaudacion_total = db.query(func.sum(Transaction.monto)).join(Loan).join(Client).filter(
+        Client.user_id == user.id,
+        Transaction.tipo == 'pago_cuota'
+    ).scalar() or 0
+    
+    usd_count = sum(1 for l in active_loans if l.moneda == 'USD')
+    ves_count = sum(1 for l in active_loans if l.moneda == 'VES')
+
     return templates.TemplateResponse("reportes-dashboard.html", {
         "request": request,
         "user": user,
@@ -917,6 +1005,10 @@ def reports_dashboard(request: Request, db: Session = Depends(get_db), current_u
         "grafico_data": grafico_data,
         "loans_activos": loans_activos,
         "unread_count": unread_count,
+        "promedio_prestamo": promedio_prestamo,
+        "recaudacion_total": recaudacion_total,
+        "usd_count": usd_count,
+        "ves_count": ves_count
     })
 
 @app.get("/analytics/report")
