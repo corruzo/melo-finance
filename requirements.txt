@@ -9,6 +9,7 @@ requests
 beautifulsoup4
 psycopg2-binary
 fpdf2
-webauthn
-pywebpush
-cryptography
+webauthn==2.1.0
+pywebpush==1.14.0
+cryptography==42.0.5
+http-ece==1.1.0

@@ -9,7 +9,7 @@ from typing import List
 import bcrypt
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 
-from database import engine, Base, get_db, init_db, User, Client, Loan, Transaction, Rate, CapitalTransaction, Notification, LoanAttachment
+from database import engine, Base, get_db, init_db, User, Client, Loan, Transaction, Rate, CapitalTransaction, Notification, LoanAttachment, WebAuthnCredential, PushSubscription
 import schemas
 from scraper import update_bcv_rate_if_needed
 import utils
@@ -33,7 +33,6 @@ from webauthn.helpers.structs import (
     ResidentKeyRequirement,
 )
 from pywebpush import webpush, WebPushException
-from database import WebAuthnCredential, PushSubscription
 
 # --- Seguridad ---
 _SECRET_KEY_FALLBACK = "melo-finance-secret-key-change-in-production"
@@ -54,8 +53,8 @@ VAPID_PUBLIC_KEY = os.environ.get("VAPID_PUBLIC_KEY")
 VAPID_CLAIMS = {"sub": "mailto:nixon@melo-finance.com"}
 
 if not VAPID_PRIVATE_KEY or not VAPID_PUBLIC_KEY:
-    print("WARNING: VAPID keys not set. Push notifications will only work locally if generated now.")
-    # No generamos aquí para no ensuciar logs, pero se debería configurar en Railway.
+    print("WARNING: VAPID keys not set. Push notifications disabled.")
+    VAPID_PUBLIC_KEY = "" # Evitar errores en templates
 
 
 # --- CSRF & Security Helpers ---
@@ -267,8 +266,7 @@ async def webauthn_login_verify(request: Request, db: Session = Depends(get_db))
         
         db_cred = db.query(WebAuthnCredential).filter(WebAuthnCredential.credential_id == cred_id_hex).first()
         if not db_cred:
-             # Reintentar con búsqueda binaria si el hex no coincide directo
-             pass
+             raise HTTPException(status_code=404, detail="Credencial no reconocida")
 
         authentication_verification = verify_authentication_response(
             credential=data,

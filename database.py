@@ -34,7 +34,6 @@ class User(Base):
     last_login = Column(DateTime, nullable=True)
     webauthn_id = Column(String, unique=True, nullable=True) # Unico para cada usuario
     
-    clients = relationship("Client", backref="user")
     credentials = relationship("WebAuthnCredential", back_populates="user")
     push_subscriptions = relationship("PushSubscription", back_populates="user")
 
