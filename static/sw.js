@@ -1,4 +1,4 @@
-const CACHE_NAME = 'melo-finance-v2';
+const CACHE_NAME = 'melo-finance-v3';
 const OFFLINE_URL = '/login';
 
 const CACHED_URLS = [
@@ -7,6 +7,7 @@ const CACHED_URLS = [
   '/dashboard',
   '/loans',
   '/clients',
+  '/reports',
   '/history/movements',
   '/history/loans',
   '/settings/profile',
