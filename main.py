@@ -932,9 +932,10 @@ def reports_dashboard(request: Request, db: Session = Depends(get_db), current_u
         for l in active_loans
     )
 
-    ganancias_reales = sum(
-        t.monto for t in db.query(Transaction).filter(Transaction.tipo == 'ingreso_extra').all()
-    )
+    ganancias_reales = db.query(func.sum(Transaction.monto)).join(Loan).join(Client).filter(
+        Client.user_id == user.id,
+        Transaction.tipo == 'ingreso_extra'
+    ).scalar() or 0
 
     unread_count = db.query(Notification).filter(Notification.user_id == user.id, Notification.leida == False).count()
 
