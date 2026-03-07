@@ -904,8 +904,13 @@ def create_client(
     return db_client
 
 @app.post("/loans/", response_model=schemas.LoanResponse)
-def create_loan(loan: schemas.LoanCreate, db: Session = Depends(get_db)):
+def create_loan(loan: schemas.LoanCreate, db: Session = Depends(get_db), current_user: User = Depends(require_user)):
     """Crear un préstamo y snapshot de la tasa del día."""
+    # Verificar que el cliente pertenezca al usuario actual
+    client = db.query(Client).filter(Client.id == loan.client_id, Client.user_id == current_user.id).first()
+    if not client:
+        raise HTTPException(status_code=403, detail="No autorizado para este cliente")
+        
     tasa = update_bcv_rate_if_needed(db)
     
     db_loan = Loan(
