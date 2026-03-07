@@ -23,10 +23,10 @@ from webauthn import (
     verify_registration_response,
     generate_authentication_options,
     verify_authentication_response,
-    options_to_json,
 )
+from webauthn.helpers import options_to_json
 from webauthn.helpers.structs import (
-    AttestationPreference,
+    AttestationConveyancePreference,
     AuthenticatorSelectionCriteria,
     UserVerificationRequirement,
     AuthenticatorAttachment,
@@ -177,7 +177,7 @@ def webauthn_register_options(db: Session = Depends(get_db), current_user: User 
         rp_name=RP_NAME,
         user_id=bytes.fromhex(current_user.webauthn_id),
         user_name=current_user.username,
-        attestation=AttestationPreference.NONE,
+        attestation=AttestationConveyancePreference.NONE,
         authenticator_selection=AuthenticatorSelectionCriteria(
             user_verification=UserVerificationRequirement.PREFERRED,
             resident_key=ResidentKeyRequirement.PREFERRED,

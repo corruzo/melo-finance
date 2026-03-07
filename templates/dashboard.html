@@ -6,16 +6,13 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Melo Finance">
     <meta name="theme-color" content="#043dae">
-    <meta name="viewport"
-        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <link rel="manifest" href="/static/manifest.json">
     <link rel="apple-touch-icon" href="/static/icon.png">
     <title>Melo Finance - Dashboard</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
-        rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
-        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
     <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
@@ -49,38 +46,31 @@
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }
 
-        /* Prevención de parpadeo de modo oscuro */
         :root {
             --bg-light: #f5f6f8;
             --bg-dark: #0f1623;
         }
     </style>
     <script>
-            (function () {
-                const theme = localStorage.getItem('theme');
-                if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                    document.documentElement.classList.add('dark');
-                } else {
-                    document.documentElement.classList.remove('dark');
-                }
-            })();
+        (function() {
+            const theme = localStorage.getItem('theme');
+            if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        })();
     </script>
     <script src="/static/darkMode.js"></script>
 </head>
 
 <body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen">
-    <!-- Sidebar Overlay -->
-    <div id="sidebar-overlay" onclick="toggleSidebar()"
-        class="fixed inset-0 bg-black/50 z-[90] hidden backdrop-blur-sm transition-opacity"></div>
+    <div id="sidebar-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/50 z-[90] hidden backdrop-blur-sm transition-opacity"></div>
 
-    <!-- Sidebar / Drawer -->
-    <div id="sidebar"
-        class="fixed top-0 left-0 bottom-0 w-64 bg-white dark:bg-slate-900 z-[100] -translate-x-full transition-transform duration-300 ease-in-out border-r border-slate-200 dark:border-slate-800 flex flex-col">
+    <div id="sidebar" class="fixed top-0 left-0 bottom-0 w-64 bg-white dark:bg-slate-900 z-[100] -translate-x-full transition-transform duration-300 ease-in-out border-r border-slate-200 dark:border-slate-800 flex flex-col">
         <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-            <h2 class="text-xl font-black text-primary italic">Melo <span
-                    class="text-slate-900 dark:text-white not-italic">Finance</span></h2>
-            <span
-                class="bg-primary text-white text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-tighter">BETA</span>
+            <h2 class="text-xl font-black text-primary italic">Melo <span class="text-slate-900 dark:text-white not-italic">Finance</span></h2>
+            <span class="bg-primary text-white text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-tighter">BETA</span>
             <button onclick="toggleSidebar()" class="text-slate-400 hover:text-slate-900 dark:hover:text-white">
                 <span class="material-symbols-outlined">close</span>
             </button>
@@ -89,99 +79,74 @@
             <a href="/dashboard" class="flex items-center gap-3 p-3 rounded-xl bg-primary/5 text-primary font-bold">
                 <span class="material-symbols-outlined">dashboard</span> Dashboard
             </a>
-            <a href="/clients"
-                class="flex items-center gap-3 p-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+            <a href="/clients" class="flex items-center gap-3 p-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                 <span class="material-symbols-outlined">group</span> Clientes
             </a>
-            <a href="/loans"
-                class="flex items-center gap-3 p-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+            <a href="/loans" class="flex items-center gap-3 p-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                 <span class="material-symbols-outlined">account_balance_wallet</span> Centro de Préstamos
             </a>
-            <a href="/history/loans"
-                class="flex items-center gap-3 p-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+            <a href="/history/loans" class="flex items-center gap-3 p-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                 <span class="material-symbols-outlined">history</span> Historial Préstamos
             </a>
-            <a href="/history/movements"
-                class="flex items-center gap-3 p-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+            <a href="/history/movements" class="flex items-center gap-3 p-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                 <span class="material-symbols-outlined">receipt_long</span> Movimientos
             </a>
-            <a href="/reports"
-                class="flex items-center gap-3 p-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+            <a href="/reports" class="flex items-center gap-3 p-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                 <span class="material-symbols-outlined">analytics</span> Reportes y Analíticas
             </a>
-            <a href="/settings/profile"
-                class="flex items-center gap-3 p-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+            <a href="/settings/profile" class="flex items-center gap-3 p-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                 <span class="material-symbols-outlined">settings</span> Ajustes
             </a>
         </nav>
         <div class="p-4 border-t border-slate-100 dark:border-slate-800">
-            <a href="/logout"
-                class="flex items-center gap-3 p-3 rounded-xl text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors font-bold">
+            <a href="/logout" class="flex items-center gap-3 p-3 rounded-xl text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors font-bold">
                 <span class="material-symbols-outlined">logout</span> Cerrar Sesión
             </a>
         </div>
     </div>
 
-    <div
-        class="relative flex min-h-screen w-full flex-col max-w-5xl mx-auto bg-white dark:bg-slate-900 md:shadow-2xl md:border-x border-slate-200 dark:border-slate-800">
-        <!-- Top Navigation Bar -->
-        <div
-            class="flex items-center bg-white dark:bg-slate-900 p-4 pb-2 justify-between sticky top-0 z-30 border-b border-slate-100 dark:border-slate-800">
-            <button onclick="toggleSidebar()"
-                class="text-slate-900 dark:text-slate-100 flex size-10 shrink-0 items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
+    <div class="relative flex min-h-screen w-full flex-col max-w-5xl mx-auto bg-white dark:bg-slate-900 md:shadow-2xl md:border-x border-slate-200 dark:border-slate-800">
+        <div class="flex items-center bg-white dark:bg-slate-900 p-4 pb-2 justify-between sticky top-0 z-30 border-b border-slate-100 dark:border-slate-800">
+            <button onclick="toggleSidebar()" class="text-slate-900 dark:text-slate-100 flex size-10 shrink-0 items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
                 <span class="material-symbols-outlined">menu</span>
             </button>
             <div class="flex-1 flex flex-col items-center">
-                <h2
-                    class="text-primary italic font-black text-2xl md:text-3xl tracking-tight leading-none pointer-events-none">
-                    Melo
-                    <span class="text-slate-900 dark:text-white not-italic">Finance</span>
+                <h2 class="text-primary italic font-black text-2xl md:text-3xl tracking-tight leading-none pointer-events-none">
+                    Melo <span class="text-slate-900 dark:text-white not-italic">Finance</span>
                 </h2>
-                <p class="text-[10px] md:text-sm text-slate-400 uppercase font-bold tracking-[0.2em] mt-1">Dashboard
-                    Integral</p>
+                <p class="text-[10px] md:text-sm text-slate-400 uppercase font-bold tracking-[0.2em] mt-1">Dashboard Integral</p>
             </div>
             <div class="flex items-center gap-2">
-                <a href="/notifications"
-                    class="flex size-10 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-primary transition-colors relative">
+                <a href="/notifications" class="flex size-10 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-primary transition-colors relative">
                     <span class="material-symbols-outlined">notifications</span>
                     {% if unread_count > 0 %}
-                    <span
-                        class="absolute top-2 right-2 w-4 h-4 bg-red-500 rounded-full border border-white dark:border-slate-900 text-[10px] text-white font-bold flex items-center justify-center">{{
-                        unread_count }}</span>
+                    <span class="absolute top-2 right-2 w-4 h-4 bg-red-500 rounded-full border border-white dark:border-slate-900 text-[10px] text-white font-bold flex items-center justify-center">{{ unread_count }}</span>
                     {% endif %}
                 </a>
-                <button onclick="toggleDarkMode()"
-                    class="flex size-10 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">
+                <button onclick="toggleDarkMode()" class="flex size-10 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">
                     <span class="material-symbols-outlined dark:hidden">dark_mode</span>
                     <span class="material-symbols-outlined hidden dark:block">light_mode</span>
                 </button>
-                <a href="/settings/profile"
-                    class="flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
+                <a href="/settings/profile" class="flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
                     <span class="material-symbols-outlined">person</span>
                 </a>
             </div>
         </div>
-        <!-- Greeting & Actions -->
+
         <div class="px-6 py-8 md:py-12 flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div>
                 <h2 class="text-3xl md:text-6xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
                     ¡Hola, <span class="text-primary italic">{{ user.nombre or 'Usuario' }}</span>!
                 </h2>
-                <p class="text-base md:text-2xl text-slate-400 font-medium mt-2">Gestiona tu cartera de préstamos de
-                    manera inteligente.</p>
+                <p class="text-base md:text-2xl text-slate-400 font-medium mt-2">Gestiona tu cartera de préstamos de manera inteligente.</p>
             </div>
-
-
         </div>
 
         <div class="md:grid md:grid-cols-2 md:gap-6 md:px-6">
-            <!-- Exchange Rate Widget -->
             <div class="px-4 md:px-0 py-2">
-                <div
-                    class="flex flex-1 items-center justify-between gap-4 rounded-[2rem] border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm h-full">
+                <div class="flex flex-1 items-center justify-between gap-4 rounded-[2rem] border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm h-full">
                     <div class="flex flex-col gap-1">
-                        <p class="text-slate-900 dark:text-slate-100 text-lg font-bold leading-tight">Tasa BCV oficial
-                        </p>
+                        <p class="text-slate-900 dark:text-slate-100 text-lg font-bold leading-tight">Tasa BCV oficial</p>
                         <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Sincronizado hace 5 min</p>
                     </div>
                     <div class="flex items-center gap-3 text-primary font-black text-2xl">
@@ -190,24 +155,18 @@
                     </div>
                 </div>
             </div>
-            <!-- Capital Card -->
             <div class="p-4 md:p-0 py-2">
-                <div
-                    class="relative overflow-hidden flex flex-col items-stretch justify-start rounded-[2.5rem] shadow-2xl bg-primary p-8 text-white h-full min-h-[180px]">
-                    <!-- Background Decorative Pattern -->
+                <div class="relative overflow-hidden flex flex-col items-stretch justify-start rounded-[2.5rem] shadow-2xl bg-primary p-8 text-white h-full min-h-[180px]">
                     <div class="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
                     <div class="relative z-10">
-                        <p class="text-white/80 text-xs font-black uppercase tracking-[0.2em] mb-4">Capital Total
-                            Disponible</p>
+                        <p class="text-white/80 text-xs font-black uppercase tracking-[0.2em] mb-4">Capital Total Disponible</p>
                         <div class="space-y-4">
                             <div class="flex items-baseline gap-3">
-                                <h1 class="text-4xl md:text-5xl font-black tracking-tight">${{
-                                    disponible_usd|format_currency }}</h1>
+                                <h1 class="text-4xl md:text-5xl font-black tracking-tight">${{ disponible_usd|format_currency }}</h1>
                                 <span class="text-white/60 text-sm font-black">USD</span>
                             </div>
                             <div class="flex items-baseline gap-3">
-                                <h2 class="text-2xl md:text-3xl font-bold tracking-tight text-white/90">Bs. {{
-                                    disponible_ves|format_currency }}</h2>
+                                <h2 class="text-2xl md:text-3xl font-bold tracking-tight text-white/90">Bs. {{ disponible_ves|format_currency }}</h2>
                                 <span class="text-white/60 text-xs font-bold">VES</span>
                             </div>
                         </div>
@@ -215,173 +174,126 @@
                 </div>
             </div>
         </div>
-        <!-- Main Content Area Grid for Desktop -->
+
         <div class="md:grid md:grid-cols-12 md:gap-6 md:px-6">
-            <!-- Portfolio Summary Section (Izquierda en PC) -->
-            <div class="px-4 pt-4 md:pt-6 md:col-span-7">
-                <h3
-                    class="text-slate-900 dark:text-slate-100 text-lg md:text-2xl font-black leading-tight tracking-tight mb-6 uppercase">
-                    Resumen de Cartera</h3>
-                <div class="grid grid-cols-2 gap-4">
-                    <!-- Active Loans Indicator -->
-                    <div
-                        class="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
+            <div class="px-4 pt-4 md:pt-6 md:col-span-12">
+                <h3 class="text-slate-900 dark:text-slate-100 text-lg md:text-2xl font-black leading-tight tracking-tight mb-6 uppercase">Resumen de Cartera</h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
                         <div class="size-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
                             <span class="material-symbols-outlined text-primary text-2xl">payments</span>
                         </div>
-                        <p
-                            class="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1 truncate">
-                            Préstamos Activos</p>
-                        <p class="text-slate-900 dark:text-slate-100 text-2xl font-black truncate">{{
-                            total_prestamos_activos }}
-                        </p>
+                        <p class="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1 truncate">Préstamos Activos</p>
+                        <p class="text-slate-900 dark:text-slate-100 text-2xl font-black truncate">{{ total_prestamos_activos }}</p>
                         <div class="mt-3 flex items-center gap-1 text-[10px] text-red-500 font-bold truncate">
                             <span class="material-symbols-outlined text-[10px]">warning</span>
                             <span>{{ prestamos_vencidos }} atrasados</span>
                         </div>
                     </div>
-                    <!-- Projected Profits Indicator -->
-                    <div
-                        class="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
+                    <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
                         <div class="size-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center mb-4">
                             <span class="material-symbols-outlined text-emerald-500 text-2xl">trending_up</span>
                         </div>
-                        <p
-                            class="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1 truncate">
-                            Ganan. Reales</p>
-                        <p class="text-slate-900 dark:text-slate-100 text-xl md:text-2xl font-black truncate">${{
-                            "%.2f"|format(ganancias_reales)
-                            }}</p>
+                        <p class="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1 truncate">Ganan. Reales</p>
+                        <p class="text-slate-900 dark:text-slate-100 text-xl md:text-2xl font-black truncate">${{ "%.2f"|format(ganancias_reales) }}</p>
                         <span class="text-[10px] text-emerald-500 font-bold truncate">Intereses Cobrados</span>
                     </div>
-                    <!-- Money Out (Lent) Indicator -->
-                    <div
-                        class="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
+                    <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
                         <div class="size-12 rounded-2xl bg-orange-500/10 flex items-center justify-center mb-4">
                             <span class="material-symbols-outlined text-orange-500 text-2xl">upload</span>
                         </div>
-                        <p
-                            class="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1 truncate">
-                            Dinero Prestado</p>
-                        <p class="text-slate-900 dark:text-slate-100 text-xl md:text-2xl font-black truncate">${{
-                            capital_prestado_usd|format_currency }}</p>
+                        <p class="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1 truncate">Dinero Prestado</p>
+                        <p class="text-slate-900 dark:text-slate-100 text-xl md:text-2xl font-black truncate">${{ capital_prestado_usd|format_currency }}</p>
                         <span class="text-[10px] text-slate-400 font-medium truncate">Capital en calle</span>
                     </div>
-                    <!-- Projected Indicator -->
-                    <div
-                        class="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
+                    <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
                         <div class="size-12 rounded-2xl bg-blue-500/10 flex items-center justify-center mb-4">
                             <span class="material-symbols-outlined text-blue-500 text-2xl">analytics</span>
                         </div>
-                        <p
-                            class="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1 truncate">
-                            Interés Proyect.</p>
-                        <p class="text-slate-900 dark:text-slate-100 text-xl md:text-2xl font-black truncate">${{
-                            ganancias_proyectadas|format_currency }}</p>
+                        <p class="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1 truncate">Interés Proyect.</p>
+                        <p class="text-slate-900 dark:text-slate-100 text-xl md:text-2xl font-black truncate">${{ ganancias_proyectadas|format_currency }}</p>
                         <span class="text-[10px] text-slate-400 font-medium truncate">Por cobrar</span>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Ads & Performance Section -->
-            <div class="md:grid md:grid-cols-12 md:gap-6 md:px-6">
-                <!-- Performance Chart (Izquierda en PC) -->
-                <div class="px-4 mt-6 md:mt-6 pb-8 md:col-span-8">
-                    <div
-                        class="bg-white dark:bg-slate-900 p-6 md:p-8 rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-800 h-full flex flex-col">
-                        <div class="flex items-center justify-between mb-8">
-                            <p class="text-slate-900 dark:text-slate-100 font-black uppercase tracking-widest text-sm">
-                                Rendimiento Mensual</p>
-                            <span class="material-symbols-outlined text-slate-400">more_horiz</span>
-                        </div>
-                        <!-- Dynamic Bar Chart -->
-                        <div class="flex flex-1 items-end justify-between h-48 px-2 gap-3">
-                            {% for item in grafico_data %}
-                            <div class="flex-1 flex flex-col items-center gap-1 group/bar">
-                                <div class="w-full bg-primary/20 rounded-t-xl relative transition-all duration-500 hover:bg-primary"
-                                    style="height: {{ item.height if item.height > 8 else 8 }}%">
-                                    <div
-                                        class="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-3 py-1.5 rounded-lg opacity-0 group-hover/bar:opacity-100 transition-opacity whitespace-nowrap font-bold shadow-xl">
-                                        {{ item.label }}: {{ item.height }}%
-                                    </div>
+        <div class="md:grid md:grid-cols-12 md:gap-6 md:px-6">
+            <div class="px-4 mt-6 pb-8 md:col-span-8">
+                <div class="bg-white dark:bg-slate-900 p-6 md:p-8 rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-800 h-full flex flex-col">
+                    <div class="flex items-center justify-between mb-8">
+                        <p class="text-slate-900 dark:text-slate-100 font-black uppercase tracking-widest text-sm">Rendimiento Mensual</p>
+                        <span class="material-symbols-outlined text-slate-400">more_horiz</span>
+                    </div>
+                    <div class="flex flex-1 items-end justify-between h-48 px-2 gap-3">
+                        {% for item in grafico_data %}
+                        <div class="flex-1 flex flex-col items-center gap-1 group/bar">
+                            <div class="w-full bg-primary/20 rounded-t-xl relative transition-all duration-500 hover:bg-primary" style="height: {{ item.height if item.height > 8 else 8 }}%">
+                                <div class="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-3 py-1.5 rounded-lg opacity-0 group-hover/bar:opacity-100 transition-opacity whitespace-nowrap font-bold shadow-xl">
+                                    {{ item.label }}: {{ item.height }}%
                                 </div>
                             </div>
-                            {% endfor %}
                         </div>
-                        <div class="flex justify-between mt-4 text-[10px] text-slate-400 font-black uppercase px-1">
-                            {% for item in grafico_data %}
-                            <span class="flex-1 text-center">{{ item.label[:3] }}</span>
-                            {% endfor %}
-                        </div>
+                        {% endfor %}
                     </div>
-                </div>
-
-                <!-- Ads Slot (Derecha en PC) -->
-                <div class="px-4 mt-6 md:mt-6 pb-28 md:pb-8 md:col-span-4">
-                    <div
-                        class="bg-slate-50 dark:bg-slate-800/50 rounded-[2rem] border-2 border-dashed border-slate-200 dark:border-slate-700 h-full flex flex-col items-center justify-center p-8 text-center">
-                        <div
-                            class="size-16 bg-slate-200 dark:bg-slate-700 rounded-full flex items-center justify-center mb-4">
-                            <span class="material-symbols-outlined text-slate-400">ads_click</span>
-                        </div>
-                        <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Espacio Publicitario
-                        </p>
-                        <p class="text-slate-500 dark:text-slate-400 text-xs font-medium">Prepara aquí tus anuncios de
-                            AdSense para monetizar tu flujo.</p>
+                    <div class="flex justify-between mt-4 text-[10px] text-slate-400 font-black uppercase px-1">
+                        {% for item in grafico_data %}
+                        <span class="flex-1 text-center">{{ item.label[:3] }}</span>
+                        {% endfor %}
                     </div>
                 </div>
             </div>
-            <!-- Bottom Navigation Bar -->
-            <div
-                class="fixed bottom-0 md:bottom-6 left-0 right-0 flex max-w-md md:max-w-3xl lg:max-w-5xl mx-auto gap-2 border-t md:border border-slate-200 dark:border-slate-700 md:rounded-3xl md:shadow-2xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-4 pb-6 pt-2 md:py-2 z-40 transition-all">
-                <a class="flex flex-1 md:flex-row flex-col items-center justify-center gap-2 md:gap-3 text-primary md:hover:bg-primary/5 md:py-3 md:rounded-xl transition-colors"
-                    href="/dashboard">
-                    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dashboard</span>
-                    <p class="text-[10px] md:text-sm font-bold leading-normal tracking-tight">Dashboard</p>
-                </a>
-                <a class="flex flex-1 md:flex-row flex-col items-center justify-center gap-2 md:gap-3 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors md:hover:bg-primary/5 md:py-3 md:rounded-xl"
-                    href="/clients">
-                    <span class="material-symbols-outlined">group</span>
-                    <p class="text-[10px] md:text-sm font-medium leading-normal tracking-tight">Clientes</p>
-                </a>
-                <a class="flex flex-1 md:flex-row flex-col items-center justify-center gap-2 md:gap-3 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors md:hover:bg-primary/5 md:py-3 md:rounded-xl"
-                    href="/loans">
-                    <span class="material-symbols-outlined">account_balance_wallet</span>
-                    <p class="text-[10px] md:text-sm font-medium leading-normal tracking-tight">Préstamos</p>
-                </a>
-                <a class="flex flex-1 md:flex-row flex-col items-center justify-center gap-2 md:gap-3 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors md:hover:bg-primary/5 md:py-3 md:rounded-xl"
-                    href="/reports">
-                    <span class="material-symbols-outlined">analytics</span>
-                    <p class="text-[10px] md:text-sm font-medium leading-normal tracking-tight">Reportes</p>
-                </a>
+
+            <div class="px-4 mt-6 pb-28 md:pb-8 md:col-span-4">
+                <div class="bg-slate-50 dark:bg-slate-800/50 rounded-[2rem] border-2 border-dashed border-slate-200 dark:border-slate-700 h-full flex flex-col items-center justify-center p-8 text-center">
+                    <div class="size-16 bg-slate-200 dark:bg-slate-700 rounded-full flex items-center justify-center mb-4">
+                        <span class="material-symbols-outlined text-slate-400">ads_click</span>
+                    </div>
+                    <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Espacio Publicitario</p>
+                    <p class="text-slate-500 dark:text-slate-400 text-xs font-medium">Prepara aquí tus anuncios de AdSense.</p>
+                </div>
             </div>
         </div>
-        <script>
-            // Dark mode initialization
-            if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                document.documentElement.classList.add('dark');
-            } else {
-                document.documentElement.classList.remove('dark');
-            }
 
-            function toggleSidebar() {
-                const sidebar = document.getElementById('sidebar');
-                const overlay = document.getElementById('sidebar-overlay');
-                sidebar.classList.toggle('-translate-x-full');
-                overlay.classList.toggle('hidden');
-            }
+        <div class="fixed bottom-0 md:bottom-6 left-0 right-0 flex max-w-md md:max-w-3xl lg:max-w-5xl mx-auto gap-2 border-t md:border border-slate-200 dark:border-slate-700 md:rounded-3xl md:shadow-2xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-4 pb-6 pt-2 md:py-2 z-40 transition-all">
+            <a class="flex flex-1 md:flex-row flex-col items-center justify-center gap-2 md:gap-3 text-primary md:hover:bg-primary/5 md:py-3 md:rounded-xl transition-colors" href="/dashboard">
+                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+                <p class="text-[10px] md:text-sm font-bold leading-normal tracking-tight">Dashboard</p>
+            </a>
+            <a class="flex flex-1 md:flex-row flex-col items-center justify-center gap-2 md:gap-3 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors md:hover:bg-primary/5 md:py-3 md:rounded-xl" href="/clients">
+                <span class="material-symbols-outlined">group</span>
+                <p class="text-[10px] md:text-sm font-medium leading-normal tracking-tight">Clientes</p>
+            </a>
+            <a class="flex flex-1 md:flex-row flex-col items-center justify-center gap-2 md:gap-3 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors md:hover:bg-primary/5 md:py-3 md:rounded-xl" href="/loans">
+                <span class="material-symbols-outlined">account_balance_wallet</span>
+                <p class="text-[10px] md:text-sm font-medium leading-normal tracking-tight">Préstamos</p>
+            </a>
+            <a class="flex flex-1 md:flex-row flex-col items-center justify-center gap-2 md:gap-3 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors md:hover:bg-primary/5 md:py-3 md:rounded-xl" href="/reports">
+                <span class="material-symbols-outlined">analytics</span>
+                <p class="text-[10px] md:text-sm font-medium leading-normal tracking-tight">Reportes</p>
+            </a>
+        </div>
+    </div>
 
-            function toggleDarkMode() {
-                const isDark = document.documentElement.classList.toggle('dark');
-                localStorage.setItem('theme', isDark ? 'dark' : 'light');
-            }
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
 
-            if ('serviceWorker' in navigator) {
-                window.addEventListener('load', () => {
-                    navigator.serviceWorker.register('/static/sw.js');
-                });
-            }
-        </script>
+        function toggleDarkMode() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        }
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/static/sw.js');
+            });
+        }
+    </script>
 </body>
 
 </html>
