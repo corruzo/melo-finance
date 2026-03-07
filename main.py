@@ -837,6 +837,88 @@ def create_loan(loan: schemas.LoanCreate, db: Session = Depends(get_db)):
     db.refresh(db_loan)
     return db_loan
 
+@app.get("/reports", response_class=HTMLResponse)
+def reports_dashboard(request: Request, db: Session = Depends(get_db), current_user: User = Depends(require_user)):
+    """Dashboard de Reportes y Analíticas."""
+    user = current_user
+    tasa_actual = update_bcv_rate_if_needed(db)
+
+    active_loans = db.query(Loan).join(Client).filter(Client.user_id == user.id, Loan.estatus == 'activo').all()
+
+    prestamos_vencidos = sum(1 for l in active_loans if utils.chequear_cuota_vencida(l))
+    total_activos = len(active_loans)
+    capital_prestado_usd = sum(utils.obtener_deuda_pendiente(l) for l in active_loans)
+
+    ganancias_proyectadas = sum(
+        utils.calcular_interes_simple(l.monto_principal, l.porcentaje_interes) * (l.cuotas_totales or 1)
+        for l in active_loans
+    )
+
+    ganancias_reales = sum(
+        t.monto for t in db.query(Transaction).filter(Transaction.tipo == 'ingreso_extra').all()
+    )
+
+    unread_count = db.query(Notification).filter(Notification.user_id == user.id, Notification.leida == False).count()
+
+    disponible_usd = user.capital_total_usd
+    disponible_ves = user.capital_total_ves
+
+    # Gráfico mensual (últimos 7 meses)
+    meses_labels = []
+    meses_valores = []
+    meses_nombres = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"]
+    hoy = datetime.utcnow()
+
+    for i in range(6, -1, -1):
+        target_date = hoy - timedelta(days=i * 30)
+        mes_label = meses_nombres[target_date.month - 1]
+        meses_labels.append(mes_label)
+        start = datetime(target_date.year, target_date.month, 1)
+        if target_date.month == 12:
+            end = datetime(target_date.year + 1, 1, 1)
+        else:
+            end = datetime(target_date.year, target_date.month + 1, 1)
+        sum_mes = db.query(func.sum(Transaction.monto)).join(Loan).join(Client).filter(
+            Client.user_id == user.id,
+            Transaction.tipo == 'pago_cuota',
+            Transaction.fecha >= start,
+            Transaction.fecha < end
+        ).scalar() or 0
+        meses_valores.append(sum_mes)
+
+    max_val = max(meses_valores) if meses_valores and max(meses_valores) > 0 else 1
+    grafico_data = [{"label": l, "height": int((v / max_val) * 100)} for l, v in zip(meses_labels, meses_valores)]
+
+    # Listado de préstamos activos con campo vencido
+    loans_activos = []
+    for l in active_loans:
+        loans_activos.append({
+            "id": l.id,
+            "client": l.client,
+            "monto_principal": l.monto_original if l.monto_original else l.monto_principal,
+            "moneda": l.moneda,
+            "porcentaje_interes": l.porcentaje_interes,
+            "fecha_creacion": l.fecha_creacion,
+            "fecha_vencimiento": l.fecha_vencimiento,
+            "vencido": utils.chequear_cuota_vencida(l),
+        })
+
+    return templates.TemplateResponse("reportes-dashboard.html", {
+        "request": request,
+        "user": user,
+        "total_activos": total_activos,
+        "prestamos_vencidos": prestamos_vencidos,
+        "capital_prestado_usd": capital_prestado_usd,
+        "ganancias_reales": ganancias_reales,
+        "ganancias_proyectadas": ganancias_proyectadas,
+        "disponible_usd": disponible_usd,
+        "disponible_ves": disponible_ves,
+        "tasa_actual": tasa_actual,
+        "grafico_data": grafico_data,
+        "loans_activos": loans_activos,
+        "unread_count": unread_count,
+    })
+
 @app.get("/analytics/report")
 def analytics_report(db: Session = Depends(get_db), current_user: User = Depends(require_user)):
     """Genera un reporte PDF de la cartera actual."""

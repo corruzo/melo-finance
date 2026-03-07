@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport" />
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Melo Finance">
+    <meta name="theme-color" content="#043dae">
+    <meta name="description" content="Dashboard de Reportes y Analíticas - Melo Finance">
+    <title>Melo Finance - Reportes y Analíticas</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#043dae",
+                        "background-light": "#f5f6f8",
+                        "background-dark": "#0f1623",
+                    },
+                    fontFamily: { "display": ["Outfit", "sans-serif"] },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem",
+                        "lg": "1rem",
+                        "xl": "1.5rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            min-height: 100vh;
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        :root {
+            --bg-light: #f5f6f8;
+            --bg-dark: #0f1623;
+        }
+
+        /* Animaciones */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes countUp {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .fade-in-up {
+            animation: fadeInUp 0.5s ease forwards;
+        }
+
+        .fade-in-up:nth-child(1) {
+            animation-delay: 0.05s;
+        }
+
+        .fade-in-up:nth-child(2) {
+            animation-delay: 0.1s;
+        }
+
+        .fade-in-up:nth-child(3) {
+            animation-delay: 0.15s;
+        }
+
+        .fade-in-up:nth-child(4) {
+            animation-delay: 0.2s;
+        }
+
+        /* Barra de progreso */
+        .progress-bar {
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Gráfico de barras */
+        .bar-chart-bar {
+            transition: height 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Hover cards */
+        .stat-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Donut chart */
+        .donut-ring {
+            transition: stroke-dashoffset 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Pulse badge */
+        .pulse-badge::before {
+            content: '';
+            position: absolute;
+            inset: -3px;
+            border-radius: 9999px;
+            background: currentColor;
+            opacity: 0.2;
+            animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+        }
+
+        @keyframes ping {
+
+            75%,
+            100% {
+                transform: scale(1.6);
+                opacity: 0;
+            }
+        }
+
+        /* Scrollbar personalizado */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 99px;
+        }
+
+        .dark ::-webkit-scrollbar-thumb {
+            background: #334155;
+        }
+    </style>
+    <script>
+            (function () {
+                const theme = localStorage.getItem('theme');
+                if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            })();
+    </script>
+    <script src="/static/darkMode.js"></script>
+</head>
+
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen">
+
+    <!-- Sidebar Overlay -->
+    <div id="sidebar-overlay" onclick="toggleSidebar()"
+        class="fixed inset-0 bg-black/50 z-[90] hidden backdrop-blur-sm transition-opacity"></div>
+
+    <!-- Sidebar / Drawer -->
+    <div id="sidebar"
+        class="fixed top-0 left-0 bottom-0 w-64 bg-white dark:bg-slate-900 z-[100] -translate-x-full transition-transform duration-300 ease-in-out border-r border-slate-200 dark:border-slate-800 flex flex-col">
+        <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+            <h2 class="text-xl font-black text-primary italic">Melo <span
+                    class="text-slate-900 dark:text-white not-italic">Finance</span></h2>
+            <button onclick="toggleSidebar()" class="text-slate-400 hover:text-slate-900 dark:hover:text-white">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <nav class="flex-1 p-4 space-y-2">
+            <a href="/dashboard"
+                class="flex items-center gap-3 p-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                <span class="material-symbols-outlined">dashboard</span> Dashboard
+            </a>
+            <a href="/clients"
+                class="flex items-center gap-3 p-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                <span class="material-symbols-outlined">group</span> Clientes
+            </a>
+            <a href="/loans"
+                class="flex items-center gap-3 p-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                <span class="material-symbols-outlined">account_balance_wallet</span> Centro de Préstamos
+            </a>
+            <a href="/history/loans"
+                class="flex items-center gap-3 p-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                <span class="material-symbols-outlined">history</span> Historial Préstamos
+            </a>
+            <a href="/history/movements"
+                class="flex items-center gap-3 p-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                <span class="material-symbols-outlined">receipt_long</span> Movimientos
+            </a>
+            <a href="/reports" class="flex items-center gap-3 p-3 rounded-xl bg-primary/5 text-primary font-bold">
+                <span class="material-symbols-outlined">analytics</span> Reportes y Analíticas
+            </a>
+            <a href="/settings/profile"
+                class="flex items-center gap-3 p-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                <span class="material-symbols-outlined">settings</span> Ajustes
+            </a>
+        </nav>
+        <div class="p-4 border-t border-slate-100 dark:border-slate-800">
+            <a href="/logout"
+                class="flex items-center gap-3 p-3 rounded-xl text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors font-bold">
+                <span class="material-symbols-outlined">logout</span> Cerrar Sesión
+            </a>
+        </div>
+    </div>
+
+    <!-- Main wrapper -->
+    <div
+        class="relative flex min-h-screen w-full flex-col max-w-5xl mx-auto bg-white dark:bg-slate-900 md:shadow-2xl md:border-x border-slate-200 dark:border-slate-800">
+
+        <!-- Top Navigation Bar -->
+        <div
+            class="flex items-center bg-white dark:bg-slate-900 p-4 pb-2 justify-between sticky top-0 z-30 border-b border-slate-100 dark:border-slate-800">
+            <button onclick="toggleSidebar()"
+                class="text-slate-900 dark:text-slate-100 flex size-10 shrink-0 items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
+                <span class="material-symbols-outlined">menu</span>
+            </button>
+            <div class="flex-1 flex flex-col items-center">
+                <h2
+                    class="text-primary italic font-black text-2xl md:text-3xl tracking-tight leading-none pointer-events-none">
+                    Melo <span class="text-slate-900 dark:text-white not-italic">Finance</span>
+                </h2>
+                <p class="text-[10px] md:text-sm text-slate-400 uppercase font-bold tracking-[0.2em] mt-1">Reportes y
+                    Analíticas</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <a href="/notifications"
+                    class="flex size-10 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-primary transition-colors relative">
+                    <span class="material-symbols-outlined">notifications</span>
+                    {% if unread_count > 0 %}
+                    <span
+                        class="absolute top-2 right-2 w-4 h-4 bg-red-500 rounded-full border border-white dark:border-slate-900 text-[10px] text-white font-bold flex items-center justify-center">{{
+                        unread_count }}</span>
+                    {% endif %}
+                </a>
+                <button onclick="toggleDarkMode()"
+                    class="flex size-10 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">
+                    <span class="material-symbols-outlined dark:hidden">dark_mode</span>
+                    <span class="material-symbols-outlined hidden dark:block">light_mode</span>
+                </button>
+                <a href="/settings/profile"
+                    class="flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
+                    <span class="material-symbols-outlined">person</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Page Header -->
+        <div class="px-6 pt-8 pb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+                <h1 class="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
+                    Reportes &amp; <span class="text-primary italic">Analíticas</span>
+                </h1>
+                <p class="text-slate-400 font-medium mt-1 text-sm md:text-base">Visión completa de tu cartera de
+                    préstamos.</p>
+            </div>
+            <!-- Export PDF Button (migrado desde dashboard) -->
+            <a href="/analytics/report"
+                class="inline-flex items-center gap-2.5 px-6 py-3.5 bg-primary text-white font-bold rounded-2xl hover:bg-primary/90 active:scale-95 transition-all shadow-lg shadow-primary/30 self-start md:self-auto">
+                <span class="material-symbols-outlined text-xl">picture_as_pdf</span>
+                <span>Exportar PDF</span>
+            </a>
+        </div>
+
+        <!-- ─────────────────────────────
+             KPI CARDS
+        ───────────────────────────── -->
+        <div class="px-6 py-4 grid grid-cols-2 md:grid-cols-4 gap-4">
+
+            <!-- KPI: Préstamos Activos -->
+            <div
+                class="stat-card fade-in-up bg-white dark:bg-slate-900 rounded-[1.75rem] p-5 border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col gap-3">
+                <div class="size-11 rounded-2xl bg-primary/10 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-primary text-xl">payments</span>
+                </div>
+                <div>
+                    <p class="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-1">Activos</p>
+                    <p class="text-2xl font-black text-slate-900 dark:text-white">{{ total_activos }}</p>
+                    <p class="text-[11px] font-bold text-red-500 mt-1">{{ prestamos_vencidos }} atrasados</p>
+                </div>
+            </div>
+
+            <!-- KPI: Capital Prestado -->
+            <div
+                class="stat-card fade-in-up bg-white dark:bg-slate-900 rounded-[1.75rem] p-5 border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col gap-3">
+                <div class="size-11 rounded-2xl bg-orange-500/10 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-orange-500 text-xl">upload</span>
+                </div>
+                <div>
+                    <p class="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-1">En Calle</p>
+                    <p class="text-2xl font-black text-slate-900 dark:text-white">${{
+                        capital_prestado_usd|format_currency }}</p>
+                    <p class="text-[11px] font-medium text-slate-400 mt-1">USD</p>
+                </div>
+            </div>
+
+            <!-- KPI: Ganancias Reales -->
+            <div
+                class="stat-card fade-in-up bg-white dark:bg-slate-900 rounded-[1.75rem] p-5 border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col gap-3">
+                <div class="size-11 rounded-2xl bg-emerald-500/10 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-emerald-500 text-xl">trending_up</span>
+                </div>
+                <div>
+                    <p class="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-1">Cobrado</p>
+                    <p class="text-2xl font-black text-slate-900 dark:text-white">${{ "%.2f"|format(ganancias_reales) }}
+                    </p>
+                    <p class="text-[11px] font-bold text-emerald-500 mt-1">Intereses reales</p>
+                </div>
+            </div>
+
+            <!-- KPI: Intereses Proyectados -->
+            <div
+                class="stat-card fade-in-up bg-white dark:bg-slate-900 rounded-[1.75rem] p-5 border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col gap-3">
+                <div class="size-11 rounded-2xl bg-blue-500/10 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-blue-500 text-xl">analytics</span>
+                </div>
+                <div>
+                    <p class="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-1">Proyectado</p>
+                    <p class="text-2xl font-black text-slate-900 dark:text-white">${{
+                        ganancias_proyectadas|format_currency }}</p>
+                    <p class="text-[11px] font-medium text-slate-400 mt-1">Por cobrar</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─────────────────────────────
+             GRÁFICO DE RENDIMIENTO MENSUAL
+        ───────────────────────────── -->
+        <div class="px-6 pb-4">
+            <div
+                class="bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm p-6 md:p-8">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <p class="font-black text-sm uppercase tracking-widest text-slate-900 dark:text-white">
+                            Rendimiento Mensual</p>
+                        <p class="text-[11px] text-slate-400 font-medium mt-0.5">Cobros de los últimos 7 meses</p>
+                    </div>
+                    <div class="size-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-primary text-lg">bar_chart</span>
+                    </div>
+                </div>
+
+                <!-- Bar Chart -->
+                <div class="flex flex-1 items-end justify-between h-48 px-2 gap-2 md:gap-4">
+                    {% for item in grafico_data %}
+                    <div class="flex-1 flex flex-col items-center gap-1 group/bar">
+                        <div class="w-full bg-primary/15 dark:bg-primary/20 rounded-t-xl relative transition-all duration-700 hover:bg-primary cursor-default"
+                            style="height: {{ item.height if item.height > 6 else 6 }}%">
+                            <div
+                                class="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-900 dark:bg-slate-700 text-white text-[10px] px-2.5 py-1.5 rounded-lg opacity-0 group-hover/bar:opacity-100 transition-opacity whitespace-nowrap font-bold shadow-xl pointer-events-none z-10">
+                                {{ item.label }}: {{ item.height }}%
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <!-- Eje X -->
+                <div class="flex justify-between mt-3 text-[10px] text-slate-400 font-black uppercase px-1">
+                    {% for item in grafico_data %}
+                    <span class="flex-1 text-center">{{ item.label[:3] }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- ─────────────────────────────
+             DESEMPEÑO DE LA CARTERA
+        ───────────────────────────── -->
+        <div class="px-6 pb-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            <!-- Salud de la cartera (Donut visual) -->
+            <div
+                class="bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm p-6">
+                <div class="flex items-center justify-between mb-5">
+                    <p class="font-black text-sm uppercase tracking-widest text-slate-900 dark:text-white">Salud de
+                        Cartera</p>
+                    <span class="material-symbols-outlined text-slate-400">donut_large</span>
+                </div>
+
+                <!-- Visual gauge -->
+                <div class="flex items-center justify-center py-2">
+                    {% set pct_sanos = (((total_activos - prestamos_vencidos) / total_activos * 100)|int) if
+                    total_activos > 0 else 100 %}
+                    {% set circum = 251.2 %}
+                    {% set offset = circum - (circum * pct_sanos / 100) %}
+                    <div class="relative flex items-center justify-center">
+                        <svg width="140" height="140" viewBox="0 0 100 100" class="-rotate-90">
+                            <circle cx="50" cy="50" r="40" fill="none" stroke="#e2e8f0" stroke-width="8"
+                                class="dark:opacity-20" />
+                            <circle cx="50" cy="50" r="40" fill="none"
+                                stroke="{{ '#10b981' if pct_sanos >= 80 else '#f59e0b' if pct_sanos >= 50 else '#ef4444' }}"
+                                stroke-width="8" stroke-linecap="round" stroke-dasharray="{{ circum }}"
+                                stroke-dashoffset="{{ offset }}" class="donut-ring" />
+                        </svg>
+                        <div class="absolute flex flex-col items-center">
+                            <span class="text-3xl font-black text-slate-900 dark:text-white">{{ pct_sanos }}%</span>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">al día</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Legend -->
+                <div class="grid grid-cols-2 gap-3 mt-4">
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
+                        <span class="text-xs font-bold text-slate-600 dark:text-slate-400">Al día: {{ total_activos -
+                            prestamos_vencidos }}</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-red-500"></span>
+                        <span class="text-xs font-bold text-slate-600 dark:text-slate-400">Atrasados: {{
+                            prestamos_vencidos }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Capital Summary -->
+            <div
+                class="bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm p-6">
+                <div class="flex items-center justify-between mb-5">
+                    <p class="font-black text-sm uppercase tracking-widest text-slate-900 dark:text-white">Capital</p>
+                    <span class="material-symbols-outlined text-slate-400">account_balance</span>
+                </div>
+
+                <div class="space-y-4">
+                    <!-- USD -->
+                    <div>
+                        <div class="flex justify-between items-center mb-1.5">
+                            <span class="text-xs font-bold text-slate-500 uppercase tracking-widest">Disponible
+                                USD</span>
+                            <span class="text-sm font-black text-slate-900 dark:text-white">${{
+                                disponible_usd|format_currency }}</span>
+                        </div>
+                        {% set total_usd = disponible_usd + capital_prestado_usd %}
+                        {% set bar_usd = ((disponible_usd / total_usd * 100)|int) if total_usd > 0 else 100 %}
+                        <div class="h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                            <div class="h-full bg-primary rounded-full progress-bar" style="width: {{ bar_usd }}%">
+                            </div>
+                        </div>
+                        <div class="flex justify-between mt-1">
+                            <span class="text-[10px] text-slate-400">{{ bar_usd }}% libre</span>
+                            <span class="text-[10px] text-orange-500">{{ 100 - bar_usd }}% prestado</span>
+                        </div>
+                    </div>
+
+                    <!-- VES -->
+                    <div>
+                        <div class="flex justify-between items-center mb-1.5">
+                            <span class="text-xs font-bold text-slate-500 uppercase tracking-widest">Disponible
+                                VES</span>
+                            <span class="text-sm font-black text-slate-900 dark:text-white">Bs. {{
+                                disponible_ves|format_currency }}</span>
+                        </div>
+                        <div class="h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                            <div class="h-full bg-emerald-500 rounded-full progress-bar" style="width: 100%"></div>
+                        </div>
+                        <p class="text-[10px] text-slate-400 mt-1">Saldo total en bolívares</p>
+                    </div>
+
+                    <!-- Tasa BCV -->
+                    <div class="mt-2 flex items-center justify-between p-3 bg-primary/5 dark:bg-primary/10 rounded-xl">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-primary text-lg">public</span>
+                            <span class="text-xs font-bold text-slate-600 dark:text-slate-300">Tasa BCV</span>
+                        </div>
+                        <span class="text-sm font-black text-primary">Bs. {{ tasa_actual|format_currency }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─────────────────────────────
+             TABLA DE PRÉSTAMOS ACTIVOS
+        ───────────────────────────── -->
+        <div class="px-6 pb-28 md:pb-10">
+            <div
+                class="bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
+                <div class="p-6 flex items-center justify-between border-b border-slate-100 dark:border-slate-800">
+                    <div>
+                        <p class="font-black text-sm uppercase tracking-widest text-slate-900 dark:text-white">Cartera
+                            Activa</p>
+                        <p class="text-[11px] text-slate-400 font-medium mt-0.5">{{ total_activos }} préstamos vigentes
+                        </p>
+                    </div>
+                    <a href="/loans" class="flex items-center gap-1.5 text-xs font-bold text-primary hover:underline">
+                        Ver todos <span class="material-symbols-outlined text-base">arrow_forward</span>
+                    </a>
+                </div>
+
+                {% if loans_activos %}
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="border-b border-slate-100 dark:border-slate-800">
+                                <th class="px-6 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                                    Cliente</th>
+                                <th class="px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                                    Monto</th>
+                                <th
+                                    class="px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400 hidden md:table-cell">
+                                    Interés</th>
+                                <th
+                                    class="px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400 hidden md:table-cell">
+                                    Vencimiento</th>
+                                <th class="px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                                    Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-50 dark:divide-slate-800/50">
+                            {% for loan in loans_activos %}
+                            <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors group">
+                                <td class="px-6 py-4">
+                                    <a href="/loans/{{ loan.id }}" class="flex items-center gap-3 group/link">
+                                        <div
+                                            class="size-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 group-hover/link:bg-primary transition-colors">
+                                            <span
+                                                class="material-symbols-outlined text-primary group-hover/link:text-white text-base transition-colors">person</span>
+                                        </div>
+                                        <div>
+                                            <p class="font-bold text-sm text-slate-900 dark:text-white leading-tight">{{
+                                                loan.client.nombre }}</p>
+                                            <p class="text-[10px] text-slate-400 font-medium">{{
+                                                loan.fecha_creacion.strftime('%d/%m/%Y') }}</p>
+                                        </div>
+                                    </a>
+                                </td>
+                                <td class="px-4 py-4">
+                                    <p class="font-black text-sm text-slate-900 dark:text-white">
+                                        {{ "$" if loan.moneda == "USD" else "Bs." }} {{
+                                        loan.monto_principal|format_currency }}
+                                    </p>
+                                    <p class="text-[10px] text-slate-400 font-medium">{{ loan.moneda }}</p>
+                                </td>
+                                <td class="px-4 py-4 hidden md:table-cell">
+                                    <span
+                                        class="inline-flex items-center px-2.5 py-1 rounded-lg bg-primary/10 text-primary text-xs font-black">
+                                        {{ loan.porcentaje_interes }}%
+                                    </span>
+                                </td>
+                                <td class="px-4 py-4 hidden md:table-cell">
+                                    <p class="text-sm font-medium text-slate-600 dark:text-slate-300">
+                                        {{ loan.fecha_vencimiento.strftime('%d/%m/%Y') if loan.fecha_vencimiento else
+                                        'Sin venc.' }}
+                                    </p>
+                                </td>
+                                <td class="px-4 py-4">
+                                    {% if loan.vencido %}
+                                    <span
+                                        class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-red-500/10 text-red-500 text-[10px] font-black">
+                                        <span class="material-symbols-outlined text-[12px]">warning</span> Atrasado
+                                    </span>
+                                    {% else %}
+                                    <span
+                                        class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-500 text-[10px] font-black">
+                                        <span class="material-symbols-outlined text-[12px]">check_circle</span> Al día
+                                    </span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="flex flex-col items-center justify-center py-16 text-center px-6">
+                    <div
+                        class="size-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
+                        <span class="material-symbols-outlined text-3xl text-slate-300">payments</span>
+                    </div>
+                    <h3 class="font-bold text-base text-slate-500">Sin préstamos activos</h3>
+                    <p class="text-slate-400 text-sm max-w-xs mt-1">Cuando registres préstamos aparecerán aquí con sus
+                        métricas.</p>
+                    <a href="/loans/new"
+                        class="mt-4 inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white font-bold rounded-xl text-sm hover:bg-primary/90 transition-colors">
+                        <span class="material-symbols-outlined text-base">add</span> Nuevo Préstamo
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Bottom Navigation Bar -->
+        <div
+            class="fixed bottom-0 md:bottom-6 left-0 right-0 flex max-w-md md:max-w-3xl lg:max-w-5xl mx-auto gap-2 border-t md:border border-slate-200 dark:border-slate-700 md:rounded-3xl md:shadow-2xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-4 pb-6 pt-2 md:py-2 z-40 transition-all">
+            <a class="flex flex-1 md:flex-row flex-col items-center justify-center gap-2 md:gap-3 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors md:hover:bg-primary/5 md:py-3 md:rounded-xl"
+                href="/dashboard">
+                <span class="material-symbols-outlined">dashboard</span>
+                <p class="text-[10px] md:text-sm font-medium leading-normal tracking-tight">Dashboard</p>
+            </a>
+            <a class="flex flex-1 md:flex-row flex-col items-center justify-center gap-2 md:gap-3 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors md:hover:bg-primary/5 md:py-3 md:rounded-xl"
+                href="/clients">
+                <span class="material-symbols-outlined">group</span>
+                <p class="text-[10px] md:text-sm font-medium leading-normal tracking-tight">Clientes</p>
+            </a>
+            <a class="flex flex-1 md:flex-row flex-col items-center justify-center gap-2 md:gap-3 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors md:hover:bg-primary/5 md:py-3 md:rounded-xl"
+                href="/loans">
+                <span class="material-symbols-outlined">account_balance_wallet</span>
+                <p class="text-[10px] md:text-sm font-medium leading-normal tracking-tight">Préstamos</p>
+            </a>
+            <a class="flex flex-1 md:flex-row flex-col items-center justify-center gap-2 md:gap-3 text-primary md:hover:bg-primary/5 md:py-3 md:rounded-xl transition-colors"
+                href="/reports">
+                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">analytics</span>
+                <p class="text-[10px] md:text-sm font-bold leading-normal tracking-tight">Reportes</p>
+            </a>
+        </div>
+
+    </div>
+
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
+
+        function toggleDarkMode() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        }
+
+        // Animate bars on load
+        window.addEventListener('DOMContentLoaded', () => {
+            const bars = document.querySelectorAll('[style*="height"]');
+            bars.forEach(bar => {
+                const targetHeight = bar.style.height;
+                bar.style.height = '4px';
+                setTimeout(() => {
+                    bar.style.height = targetHeight;
+                    bar.style.transition = 'height 0.8s cubic-bezier(0.4, 0, 0.2, 1)';
+                }, 100);
+            });
+
+            // Animate progress bars
+            const progressBars = document.querySelectorAll('.progress-bar');
+            progressBars.forEach(bar => {
+                const w = bar.style.width;
+                bar.style.width = '0%';
+                setTimeout(() => { bar.style.width = w; }, 200);
+            });
+        });
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/static/sw.js');
+            });
+        }
+    </script>
+
+</body>
+
+</html>
