@@ -256,6 +256,54 @@
                         </button>
                     </form>
                 </div>
+
+                <!-- 3. Biometría Section (Nivel Competitivo) -->
+                <div class="space-y-4">
+                    <div class="flex items-center gap-2 px-2">
+                        <span class="material-symbols-outlined text-primary text-lg">fingerprint</span>
+                        <h3 class="font-black text-slate-900 dark:text-white text-sm uppercase tracking-wider">Seguridad
+                            Biométrica</h3>
+                    </div>
+
+                    <div
+                        class="bg-white dark:bg-slate-800/40 rounded-[2rem] p-6 border border-slate-100 dark:border-slate-800 shadow-sm space-y-4 text-center">
+                        <div class="p-4 bg-primary/5 rounded-2xl">
+                            <span class="material-symbols-outlined text-4xl text-primary mb-2">faceid</span>
+                            <p class="text-xs text-slate-500 font-medium leading-relaxed">Activa FaceID o Huella para
+                                entrar a tu cuenta sin contraseñas.</p>
+                        </div>
+                        <button onclick="registerBiometrics()" id="btn-biometric"
+                            class="w-full h-12 bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-xl font-bold hover:shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2">
+                            <span class="material-symbols-outlined text-sm">add_moderator</span>
+                            Vincular este dispositivo
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 4. Notificaciones Section (Nivel Competitivo) -->
+                <div class="space-y-4">
+                    <div class="flex items-center gap-2 px-2">
+                        <span class="material-symbols-outlined text-primary text-lg">notifications_active</span>
+                        <h3 class="font-black text-slate-900 dark:text-white text-sm uppercase tracking-wider">Avisos
+                            y Alertas</h3>
+                    </div>
+
+                    <div
+                        class="bg-white dark:bg-slate-800/40 rounded-[2rem] p-6 border border-slate-100 dark:border-slate-800 shadow-sm space-y-4 text-center">
+                        <div class="p-4 bg-primary/5 rounded-2xl">
+                            <span
+                                class="material-symbols-outlined text-4xl text-primary mb-2">notifications_paused</span>
+                            <p class="text-xs text-slate-500 font-medium leading-relaxed">Recibe alertas al instante
+                                sobre
+                                pagos recibidos y vencimientos.</p>
+                        </div>
+                        <button onclick="subscribeToPush()" id="btn-push"
+                            class="w-full h-12 border-2 border-primary text-primary rounded-xl font-bold hover:bg-primary/5 transition-all active:scale-[0.98] flex items-center justify-center gap-2">
+                            <span class="material-symbols-outlined text-sm">notifications</span>
+                            Activar Notificaciones
+                        </button>
+                    </div>
+                </div>
             </div>
     </div>
 
@@ -301,6 +349,128 @@
             const overlay = document.getElementById('sidebar-overlay');
             sidebar.classList.toggle('-translate-x-full');
             overlay.classList.toggle('hidden');
+        }
+
+        // --- Lógica WebAuthn (Biometría) ---
+        async function registerBiometrics() {
+            const btn = document.getElementById('btn-biometric');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="animate-spin material-symbols-outlined">sync</span> Registrando...';
+
+            try {
+                // 1. Obtener opciones del servidor
+                const optionsRes = await fetch('/auth/webauthn/register/options');
+                const options = await optionsRes.json();
+
+                // 2. Convertir campos base64 del server a bytes para el navegador
+                options.challenge = bufferDecode(options.challenge);
+                options.user.id = bufferDecode(options.user.id);
+                if (options.excludeCredentials) {
+                    options.excludeCredentials.forEach(c => c.id = bufferDecode(c.id));
+                }
+
+                // 3. Crear credencial en el dispositivo
+                const credential = await navigator.credentials.create({ publicKey: options });
+
+                // 4. Codificar respuesta para enviar al server
+                const rawId = bufferEncode(credential.rawId);
+                const attestationObject = bufferEncode(credential.response.attestationObject);
+                const clientDataJSON = bufferEncode(credential.response.clientDataJSON);
+
+                const response = {
+                    id: credential.id,
+                    rawId: rawId,
+                    type: credential.type,
+                    response: {
+                        attestationObject: attestationObject,
+                        clientDataJSON: clientDataJSON
+                    }
+                };
+
+                // 5. Verificar en servidor
+                const verifyRes = await fetch('/auth/webauthn/register/verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(response)
+                });
+
+                if (verifyRes.ok) {
+                    alert('¡Dispositivo vinculado con éxito! Ahora puedes entrar con biometría.');
+                    btn.classList.replace('bg-slate-900', 'bg-green-500');
+                    btn.innerHTML = '<span class="material-symbols-outlined">check_circle</span> Dispositivo Vinculado';
+                } else {
+                    throw new Error('La verificación falló');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('No se pudo registrar la biometría. Asegúrate de tener activado el bloqueo de pantalla.');
+                btn.disabled = false;
+                btn.innerHTML = '<span class="material-symbols-outlined">add_moderator</span> Intentar de nuevo';
+            }
+        }
+
+        // --- Lógica Web Push ---
+        async function subscribeToPush() {
+            const btn = document.getElementById('btn-push');
+            const vapidKey = "{{ vapid_public_key or '' }}";
+
+            if (!vapidKey) {
+                alert("Las notificaciones no están configuradas en el servidor.");
+                return;
+            }
+
+            try {
+                const permission = await Notification.requestPermission();
+                if (permission !== 'granted') {
+                    alert('Permiso denegado. Actívalos en la configuración de tu navegador.');
+                    return;
+                }
+
+                const registration = await navigator.serviceWorker.ready;
+                const subscription = await registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: urlBase64ToUint8Array(vapidKey)
+                });
+
+                const res = await fetch('/push/subscribe', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(subscription)
+                });
+
+                if (res.ok) {
+                    alert('¡Notificaciones activadas con éxito!');
+                    btn.classList.replace('border-primary', 'bg-green-500');
+                    btn.classList.replace('text-primary', 'text-white');
+                    btn.innerHTML = '<span class="material-symbols-outlined">notifications_active</span> Activas';
+                    // Test
+                    fetch('/push/test');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Error al suscribir. Puede que tu navegador no soporte push notifications.');
+            }
+        }
+
+        // Utils para WebAuthn
+        function bufferDecode(value) {
+            return Uint8Array.from(atob(value.replace(/-/g, "+").replace(/_/g, "/")), c => c.charCodeAt(0));
+        }
+
+        function bufferEncode(value) {
+            return btoa(String.fromCharCode.apply(null, new Uint8Array(value)))
+                .replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+        }
+
+        function urlBase64ToUint8Array(base64String) {
+            const padding = '='.repeat((4 - base64String.length % 4) % 4);
+            const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+            const rawData = window.atob(base64);
+            const outputArray = new Uint8Array(rawData.length);
+            for (let i = 0; i < rawData.length; ++i) {
+                outputArray[i] = rawData.charCodeAt(i);
+            }
+            return outputArray;
         }
     </script>
 </body>

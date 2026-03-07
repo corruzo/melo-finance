@@ -175,6 +175,21 @@
                     Entrar ahora
                     <span class="material-symbols-outlined">arrow_forward</span>
                 </button>
+
+                <!-- Biometric Login (Nivel Competitivo) -->
+                <div id="biometric-area" class="hidden">
+                    <div class="flex items-center gap-4 my-4">
+                        <div class="flex-1 h-px bg-gray-100 dark:bg-gray-800"></div>
+                        <span class="text-xs text-gray-400 font-bold uppercase tracking-widest">O también</span>
+                        <div class="flex-1 h-px bg-gray-100 dark:bg-gray-800"></div>
+                    </div>
+
+                    <button type="button" onclick="loginBiometric()"
+                        class="w-full border-2 border-slate-900 dark:border-white text-slate-900 dark:text-white rounded-[2rem] py-5 font-bold text-lg hover:bg-slate-50 dark:hover:bg-white/5 active:scale-[0.98] transition-all flex items-center justify-center gap-3">
+                        <span class="material-symbols-outlined text-2xl">fingerprint</span>
+                        Usar Biometría
+                    </button>
+                </div>
             </form>
 
             <!-- Registro y footer móvil -->
@@ -217,6 +232,80 @@
             const type = input.type === 'password' ? 'text' : 'password';
             input.type = type;
             icon.textContent = type === 'password' ? 'visibility' : 'visibility_off';
+        }
+
+        // --- Lógica WebAuthn (Login) ---
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.PublicKeyCredential) {
+                document.getElementById('biometric-area').classList.remove('hidden');
+            }
+        });
+
+        async function loginBiometric() {
+            const emailInput = document.querySelector('input[name="email"]');
+            const username = emailInput.value.trim();
+
+            if (!username) {
+                alert('Por favor, ingresa tu correo primero para usar biometría.');
+                emailInput.focus();
+                return;
+            }
+
+            try {
+                // 1. Obtener opciones de login
+                const optionsRes = await fetch(`/auth/webauthn/login/options?username=${encodeURIComponent(username)}`);
+                if (!optionsRes.ok) {
+                    throw new Error('Este dispositivo no está vinculado a tu cuenta.');
+                }
+                const options = await optionsRes.json();
+
+                // 2. Convertir campos base64 a bytes
+                options.challenge = bufferDecode(options.challenge);
+                options.allowCredentials.forEach(c => c.id = bufferDecode(c.id));
+
+                // 3. Solicitar firma al dispositivo
+                const assertion = await navigator.credentials.get({ publicKey: options });
+
+                // 4. Codificar respuesta
+                const response = {
+                    id: assertion.id,
+                    rawId: bufferEncode(assertion.rawId),
+                    type: assertion.type,
+                    response: {
+                        authenticatorData: bufferEncode(assertion.response.authenticatorData),
+                        clientDataJSON: bufferEncode(assertion.response.clientDataJSON),
+                        signature: bufferEncode(assertion.response.signature),
+                        userHandle: assertion.response.userHandle ? bufferEncode(assertion.response.userHandle) : null
+                    }
+                };
+
+                // 5. Verificar en servidor e iniciar sesión
+                const verifyRes = await fetch('/auth/webauthn/login/verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(response)
+                });
+
+                if (verifyRes.ok) {
+                    window.location.href = '/dashboard';
+                } else {
+                    const error = await verifyRes.json();
+                    throw new Error(error.detail || 'Fallo la biometría');
+                }
+            } catch (err) {
+                console.error(err);
+                alert(err.message || 'Error al iniciar sesión biométrica.');
+            }
+        }
+
+        // Utils (Duplicados para independencia de templates)
+        function bufferDecode(value) {
+            return Uint8Array.from(atob(value.replace(/-/g, "+").replace(/_/g, "/")), c => c.charCodeAt(0));
+        }
+
+        function bufferEncode(value) {
+            return btoa(String.fromCharCode.apply(null, new Uint8Array(value)))
+                .replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
         }
     </script>
 </body>

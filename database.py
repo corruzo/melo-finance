@@ -32,6 +32,11 @@ class User(Base):
     capital_total_ves = Column(Float, default=0.0)
     created_at = Column(DateTime, default=datetime.utcnow)
     last_login = Column(DateTime, nullable=True)
+    webauthn_id = Column(String, unique=True, nullable=True) # Unico para cada usuario
+    
+    clients = relationship("Client", backref="user")
+    credentials = relationship("WebAuthnCredential", back_populates="user")
+    push_subscriptions = relationship("PushSubscription", back_populates="user")
 
 class Client(Base):
     __tablename__ = "clients"
@@ -119,6 +124,29 @@ class Notification(Base):
     leida = Column(Boolean, default=False)
     
     user = relationship("User", backref="notifications")
+
+class WebAuthnCredential(Base):
+    __tablename__ = "webauthn_credentials"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    credential_id = Column(String, unique=True, index=True)
+    public_key = Column(String)
+    sign_count = Column(Integer, default=0)
+    transports = Column(String, nullable=True) 
+    
+    user = relationship("User", back_populates="credentials")
+
+class PushSubscription(Base):
+    __tablename__ = "push_subscriptions"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    endpoint = Column(String, unique=True, index=True)
+    auth_key = Column(String)
+    p256dh_key = Column(String)
+    browser = Column(String, nullable=True) # Para saber si es iPhone, Chrome, etc
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    user = relationship("User", back_populates="push_subscriptions")
 
 def init_db():
     if os.environ.get("RESET_DATABASE") == "true":

@@ -63,3 +63,48 @@ self.addEventListener('fetch', (event) => {
       .catch(() => caches.match(request).then((cached) => cached || caches.match(OFFLINE_URL)))
   );
 });
+
+// Listener para Notificaciones Push (Nivel Competitivo)
+self.addEventListener('push', (event) => {
+  let data = { title: 'Melo Finance', body: 'Nueva notificación recibida.' };
+  try {
+    if (event.data) {
+      data = event.data.json();
+    }
+  } catch (e) {
+    data = { title: 'Melo Finance', body: event.data.text() };
+  }
+
+  const options = {
+    body: data.body,
+    icon: '/static/icon.png',
+    badge: '/static/icon.png',
+    vibrate: [100, 50, 100],
+    data: {
+      url: data.url || '/dashboard'
+    }
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(data.title, options)
+  );
+});
+
+// Manejar clic en la notificación
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      if (clientList.length > 0) {
+        let client = clientList[0];
+        for (let i = 0; i < clientList.length; i++) {
+          if (clientList[i].focused) {
+            client = clientList[i];
+          }
+        }
+        return client.focus();
+      }
+      return clients.openWindow(event.notification.data.url);
+    })
+  );
+});

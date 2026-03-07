@@ -16,6 +16,24 @@ import utils
 from datetime import datetime, timedelta
 from sqlalchemy import func
 import analytics_engine
+import json
+import base64
+from webauthn import (
+    generate_registration_options,
+    verify_registration_response,
+    generate_authentication_options,
+    verify_authentication_response,
+    options_to_json,
+)
+from webauthn.helpers.structs import (
+    AttestationPreference,
+    AuthenticatorSelectionCriteria,
+    UserVerificationRequirement,
+    AuthenticatorAttachment,
+    ResidentKeyRequirement,
+)
+from pywebpush import webpush, WebPushException
+from database import WebAuthnCredential, PushSubscription
 
 # --- Seguridad ---
 _SECRET_KEY_FALLBACK = "melo-finance-secret-key-change-in-production"
@@ -24,6 +42,21 @@ if SECRET_KEY == _SECRET_KEY_FALLBACK and os.environ.get("RAILWAY_ENVIRONMENT") 
     print("WARNING: Using default SECRET_KEY in production! Set MELO_SECRET_KEY for safety.")
 
 signer = URLSafeTimedSerializer(SECRET_KEY)
+
+# --- Configuración WebAuthn (Biometría) ---
+RP_ID = os.environ.get("RP_ID", "melo-finance.up.railway.app") if os.environ.get("RAILWAY_ENVIRONMENT") == "production" else "localhost"
+RP_NAME = "Melo Finance"
+ORIGIN = f"https://{RP_ID}" if os.environ.get("RAILWAY_ENVIRONMENT") == "production" else f"http://{RP_ID}:8000"
+
+# --- Configuración WebPush (Notificaciones) ---
+VAPID_PRIVATE_KEY = os.environ.get("VAPID_PRIVATE_KEY")
+VAPID_PUBLIC_KEY = os.environ.get("VAPID_PUBLIC_KEY")
+VAPID_CLAIMS = {"sub": "mailto:nixon@melo-finance.com"}
+
+if not VAPID_PRIVATE_KEY or not VAPID_PUBLIC_KEY:
+    print("WARNING: VAPID keys not set. Push notifications will only work locally if generated now.")
+    # No generamos aquí para no ensuciar logs, pero se debería configurar en Railway.
+
 
 # --- CSRF & Security Helpers ---
 def generate_csrf_token():
@@ -125,6 +158,200 @@ def get_current_user(request: Request, db: Session = Depends(get_db)):
     except (BadSignature, SignatureExpired):
         return None
     return db.query(User).filter(User.id == user_id).first()
+
+def require_user(current_user: User = Depends(get_current_user)):
+    if not current_user:
+        raise HTTPException(status_code=status.HTTP_303_SEE_OTHER, headers={"Location": "/login"})
+    return current_user
+
+# --- Endpoints de Biometría (WebAuthn) ---
+
+@app.get("/auth/webauthn/register/options")
+def webauthn_register_options(db: Session = Depends(get_db), current_user: User = Depends(require_user)):
+    """Genera las opciones para registrar una nueva credencial biométrica."""
+    if not current_user.webauthn_id:
+        current_user.webauthn_id = os.urandom(16).hex()
+        db.commit()
+
+    options = generate_registration_options(
+        rp_id=RP_ID,
+        rp_name=RP_NAME,
+        user_id=bytes.fromhex(current_user.webauthn_id),
+        user_name=current_user.username,
+        attestation=AttestationPreference.NONE,
+        authenticator_selection=AuthenticatorSelectionCriteria(
+            user_verification=UserVerificationRequirement.PREFERRED,
+            resident_key=ResidentKeyRequirement.PREFERRED,
+        ),
+    )
+    
+    json_options = options_to_json(options)
+    res = Response(content=json_options, media_type="application/json")
+    # Guardamos el challenge en una cookie temporal para verificar luego
+    res.set_cookie("reg_options", signer.dumps(json_options), max_age=300, httponly=True, secure=True if RP_ID != "localhost" else False)
+    return res
+
+@app.post("/auth/webauthn/register/verify")
+async def webauthn_register_verify(request: Request, db: Session = Depends(get_db), current_user: User = Depends(require_user)):
+    """Verifica y guarda la nueva credencial biométrica."""
+    data = await request.json()
+    options_cookie = request.cookies.get("reg_options")
+    if not options_cookie:
+        raise HTTPException(status_code=400, detail="Sesión de registro expirada")
+    
+    try:
+        options_json = json.loads(signer.loads(options_cookie))
+        registration_verification = verify_registration_response(
+            credential=data,
+            expected_challenge=base64.urlsafe_b64decode(options_json["challenge"] + "=="),
+            expected_origin=ORIGIN,
+            expected_rp_id=RP_ID,
+        )
+        
+        # Guardar en base de datos
+        new_cred = WebAuthnCredential(
+            user_id=current_user.id,
+            credential_id=registration_verification.credential_id.hex(),
+            public_key=base64.b64encode(registration_verification.credential_public_key).decode('utf-8'),
+            sign_count=registration_verification.sign_count,
+        )
+        db.add(new_cred)
+        db.commit()
+        return {"status": "ok", "message": "Biometría registrada correctamente"}
+    except Exception as e:
+        print(f"WEBAUTHN REG ERROR: {e}")
+        raise HTTPException(status_code=400, detail="Error al verificar biometría")
+
+@app.get("/auth/webauthn/login/options")
+def webauthn_login_options(username: str, db: Session = Depends(get_db)):
+    """Genera opciones para iniciar sesión con biometría."""
+    user = db.query(User).filter(User.username == username).first()
+    if not user or not user.credentials:
+        raise HTTPException(status_code=404, detail="Usuario no tiene biometría configurada")
+
+    options = generate_authentication_options(
+        rp_id=RP_ID,
+        allow_credentials=[
+            {"id": bytes.fromhex(c.credential_id), "type": "public-key"} for c in user.credentials
+        ],
+        user_verification=UserVerificationRequirement.PREFERRED,
+    )
+    
+    json_options = options_to_json(options)
+    res = Response(content=json_options, media_type="application/json")
+    res.set_cookie("auth_options", signer.dumps(json_options), max_age=300, httponly=True, secure=True if RP_ID != "localhost" else False)
+    res.set_cookie("auth_user", str(user.id), max_age=300, httponly=True)
+    return res
+
+@app.post("/auth/webauthn/login/verify")
+async def webauthn_login_verify(request: Request, db: Session = Depends(get_db)):
+    """Verifica la firma biométrica e inicia sesión."""
+    data = await request.json()
+    options_cookie = request.cookies.get("auth_options")
+    user_id_cookie = request.cookies.get("auth_user")
+    
+    if not options_cookie or not user_id_cookie:
+        raise HTTPException(status_code=400, detail="Sesión biométrica expirada")
+    
+    user = db.query(User).filter(User.id == int(user_id_cookie)).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    try:
+        options_json = json.loads(signer.loads(options_cookie))
+        # Buscar la credencial usada
+        cred_id_hex = data["id"] # El ID que viene en el JSON de respuesta
+        # Convertir cred_id del response (base64url) a hex para buscarlo
+        # (El frontend usualmente envía el ID en formato base64url o crudo dependiendo de la lib)
+        # Nota: La librería webauthn de python maneja la conversión si le pasamos el objeto correcto.
+        
+        db_cred = db.query(WebAuthnCredential).filter(WebAuthnCredential.credential_id == cred_id_hex).first()
+        if not db_cred:
+             # Reintentar con búsqueda binaria si el hex no coincide directo
+             pass
+
+        authentication_verification = verify_authentication_response(
+            credential=data,
+            expected_challenge=base64.urlsafe_b64decode(options_json["challenge"] + "=="),
+            expected_origin=ORIGIN,
+            expected_rp_id=RP_ID,
+            credential_public_key=base64.b64decode(db_cred.public_key),
+            credential_current_sign_count=db_cred.sign_count,
+        )
+        
+        # Actualizar contador
+        db_cred.sign_count = authentication_verification.new_sign_count
+        user.last_login = datetime.utcnow()
+        db.commit()
+        
+        # Iniciar sesión (estilo melo-finance)
+        token = signer.dumps(user.id)
+        res = Response(content=json.dumps({"status": "ok"}), media_type="application/json")
+        res.set_cookie("session_token", token, max_age=60 * 60 * 24 * 30, httponly=True, secure=True if RP_ID != "localhost" else False)
+        return res
+    except Exception as e:
+        print(f"WEBAUTHN LOGIN ERROR: {e}")
+        raise HTTPException(status_code=400, detail="Firma biométrica inválida")
+
+@app.post("/push/subscribe")
+async def push_subscribe(request: Request, db: Session = Depends(get_db), current_user: User = Depends(require_user)):
+    """Guarda una nueva suscripción push del navegador."""
+    try:
+        data = await request.json()
+        # Verificar si ya existe
+        existing = db.query(PushSubscription).filter(PushSubscription.endpoint == data["endpoint"]).first()
+        if existing:
+            return {"status": "ok", "message": "Ya suscrito"}
+        
+        new_sub = PushSubscription(
+            user_id=current_user.id,
+            endpoint=data["endpoint"],
+            auth_key=data["keys"]["auth"],
+            p256dh_key=data["keys"]["p256dh"],
+            browser=request.headers.get("user-agent", "unknown")
+        )
+        db.add(new_sub)
+        db.commit()
+        return {"status": "ok"}
+    except Exception as e:
+        print(f"SUBSCRIBE ERROR: {e}")
+        return {"status": "error", "message": str(e)}
+
+@app.get("/push/test")
+def push_test(db: Session = Depends(get_db), current_user: User = Depends(require_user)):
+    """Envía una notificación de prueba para verificar que el sistema funciona."""
+    if not current_user or not current_user.push_subscriptions:
+        return {"status": "error", "message": "No hay suscripciones activas en este dispositivo."}
+    
+    if not VAPID_PRIVATE_KEY or not VAPID_PUBLIC_KEY:
+        return {"status": "error", "message": "VAPID Keys no configuradas en el servidor."}
+
+    sent_count = 0
+    expired_count = 0
+    for sub in current_user.push_subscriptions:
+        try:
+            webpush(
+                subscription_info={
+                    "endpoint": sub.endpoint,
+                    "keys": {"auth": sub.auth_key, "p256dh": sub.p256dh_key}
+                },
+                data=json.dumps({
+                    "title": "Melo Finance 🚀",
+                    "body": "¡Notificaciones push activadas correctamente!",
+                    "url": "/dashboard"
+                }),
+                vapid_private_key=VAPID_PRIVATE_KEY,
+                vapid_claims=VAPID_CLAIMS
+            )
+            sent_count += 1
+        except WebPushException as ex:
+            print(f"PUSH TEST ERROR: {ex}")
+            if ex.response and ex.response.status_code in [404, 410]:
+                db.delete(sub)
+                expired_count += 1
+    
+    db.commit()
+    return {"status": "ok", "sent": sent_count, "deleted_expired": expired_count}
 
 def require_user(current_user: User = Depends(get_current_user)):
     if not current_user:
@@ -750,7 +977,8 @@ def profile_settings_get(request: Request, db: Session = Depends(get_db), curren
         "request": request, 
         "user": current_user, 
         "unread_count": unread_count,
-        "tasa_actual": tasa_actual
+        "tasa_actual": tasa_actual,
+        "vapid_public_key": VAPID_PUBLIC_KEY
     })
 
 @app.post("/settings/profile")
