@@ -8,6 +8,12 @@ import urllib3
 # Desactivar advertencias de SSL en caso de que BCV presente certificados inseguros
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
+# Caché simple en memoria para evitar consultas excesivas en la misma ejecución/proceso
+_rate_cache = {
+    "date": None,
+    "value": None
+}
+
 def get_bcv_rate() -> float:
     """Extrae el precio del USD desde el sitio web del BCV (bcv.org.ve)"""
     url = "https://www.bcv.org.ve/"
@@ -15,8 +21,8 @@ def get_bcv_rate() -> float:
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
         }
-        # Algunas veces el BCV tiene problemas SSL, verify=False lo previene.
-        response = requests.get(url, headers=headers, verify=False, timeout=15)
+        # Timeout reducido para no bloquear la app si el BCV está lento
+        response = requests.get(url, headers=headers, verify=False, timeout=5)
         response.raise_for_status()
         
         soup = BeautifulSoup(response.content, 'html.parser')
@@ -34,7 +40,7 @@ def get_bcv_rate() -> float:
             return None
             
     except Exception as e:
-        print(f"Error extrayendo tasa del BCV: {e}")
+        print(f"Error extrayendo tasa del BCV (Timeout/Conexión): {e}")
         return None
 
 def update_bcv_rate_if_needed(db: Session = None):
@@ -42,6 +48,11 @@ def update_bcv_rate_if_needed(db: Session = None):
     Verifica si la tasa del día actual ya se encuentra en la DB.
     Si no existe, la extrae usando web scraping y la guarda para evitar llamadas repetitivas.
     """
+    today = date.today()
+    
+    # 1. Check Memory Cache first (Super Fast)
+    if _rate_cache["date"] == today and _rate_cache["value"]:
+        return _rate_cache["value"]
     close_db = False
     if db is None:
         db = SessionLocal()
@@ -52,7 +63,9 @@ def update_bcv_rate_if_needed(db: Session = None):
         # Verificar si la tasa de hoy ya está en base de datos
         existing_rate = db.query(Rate).filter(Rate.fecha == today).first()
         if existing_rate:
-            return existing_rate.valor_bs_bcv
+            _rate_cache["date"] = today
+            _rate_cache["value"] = existing_rate.valor_bs_bcv
+            return _rate_cache["value"]
             
         # Si no está, hacer el scrapeo
         rate_value = get_bcv_rate()
@@ -61,11 +74,15 @@ def update_bcv_rate_if_needed(db: Session = None):
             db.add(new_rate)
             db.commit()
             db.refresh(new_rate)
-            return new_rate.valor_bs_bcv
+            _rate_cache["date"] = today
+            _rate_cache["value"] = new_rate.valor_bs_bcv
+            return _rate_cache["value"]
             
         # Si falla el scrapeo, devolver la última tasa guardada
         last_rate = db.query(Rate).order_by(Rate.fecha.desc()).first()
         if last_rate:
+            _rate_cache["date"] = today # Cache the failure as the last rate for the rest of this today's process
+            _rate_cache["value"] = last_rate.valor_bs_bcv
             return last_rate.valor_bs_bcv
             
         # Si no hay absolutamente nada

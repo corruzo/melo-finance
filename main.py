@@ -15,6 +15,7 @@ from scraper import update_bcv_rate_if_needed
 import utils
 from datetime import datetime, timedelta
 from sqlalchemy import func
+from sqlalchemy.orm import joinedload
 import analytics_engine
 import json
 import base64
@@ -467,9 +468,8 @@ def dashboard(request: Request, db: Session = Depends(get_db), current_user: Use
     
     capital_inicial = user.capital_total_usd
     
-    # Préstamos activos asumiendo que el valor está en la moneda original
-    # Filtramos por todos los préstamos vinculados a los clientes del usuario actual
-    active_loans = db.query(Loan).join(Client).filter(Client.user_id == user.id, Loan.estatus == 'activo').all()
+    # Préstamos activos con transacciones ya cargadas (Evita N+1 query problem)
+    active_loans = db.query(Loan).options(joinedload(Loan.transactions)).join(Client).filter(Client.user_id == user.id, Loan.estatus == 'activo').all()
     
     prestamos_vencidos = sum(1 for l in active_loans if utils.chequear_cuota_vencida(l))
     total_prestamos_activos = len(active_loans)
@@ -1155,7 +1155,7 @@ def reports_dashboard(request: Request, db: Session = Depends(get_db), current_u
     user = current_user
     tasa_actual = update_bcv_rate_if_needed(db)
 
-    active_loans = db.query(Loan).join(Client).filter(Client.user_id == user.id, Loan.estatus == 'activo').all()
+    active_loans = db.query(Loan).options(joinedload(Loan.transactions)).join(Client).filter(Client.user_id == user.id, Loan.estatus == 'activo').all()
 
     prestamos_vencidos = sum(1 for l in active_loans if utils.chequear_cuota_vencida(l))
     total_activos = len(active_loans)
