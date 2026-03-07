@@ -4,11 +4,14 @@
 
 <head>
     <meta charset="utf-8" />
-    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport" />
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Melo Finance">
     <meta name="theme-color" content="#043dae">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <link rel="manifest" href="/static/manifest.json">
+    <link rel="apple-touch-icon" href="/static/icon.png">
     <title>Melo Finance - Clientes</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
@@ -72,7 +75,8 @@
         <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
             <h2 class="text-xl font-black text-primary italic">Melo <span
                     class="text-slate-900 dark:text-white not-italic">Finance</span></h2>
-            <span class="bg-primary text-white text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-tighter">BETA</span>
+            <span
+                class="bg-primary text-white text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-tighter">BETA</span>
             <button onclick="toggleSidebar()" class="text-slate-400 hover:text-slate-900 dark:hover:text-white">
                 <span class="material-symbols-outlined">close</span>
             </button>
@@ -281,11 +285,6 @@
                 href="/reports">
                 <span class="material-symbols-outlined">analytics</span>
                 <p class="text-[10px] md:text-sm font-medium leading-normal tracking-tight">Reportes</p>
-            </a>
-            <a class="flex flex-1 md:flex-row flex-col items-center justify-center gap-2 md:gap-3 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors md:hover:bg-primary/5 md:py-3 md:rounded-xl"
-                href="/settings/profile">
-                <span class="material-symbols-outlined">settings</span>
-                <p class="text-[10px] md:text-sm font-medium leading-normal tracking-tight">Ajustes</p>
             </a>
         </div>
     </div>

@@ -3,11 +3,14 @@
 
 <head>
     <meta charset="utf-8" />
-    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport" />
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Melo Finance">
     <meta name="theme-color" content="#043dae">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <link rel="manifest" href="/static/manifest.json">
+    <link rel="apple-touch-icon" href="/static/icon.png">
     <title>Melo Finance - Detalle Préstamo</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
@@ -39,7 +42,7 @@
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }
-    
+
         /* Prevención de parpadeo de modo oscuro */
         :root {
             --bg-light: #f5f6f8;
@@ -167,7 +170,73 @@
             </div>
             {% endif %}
 
-            <!-- Transaction History -->
+            <!-- Amortization Table -->
+            <div class="space-y-4">
+                <h4 class="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-4 px-2">Calendario de Pagos
+                    Proyectado</h4>
+                <div
+                    class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 p-2 overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead>
+                            <tr
+                                class="text-slate-400 text-[10px] uppercase font-black border-b border-slate-50 dark:border-slate-800">
+                                <th class="px-4 py-3"># Cuota</th>
+                                <th class="px-4 py-3">Fecha Estimada</th>
+                                <th class="px-4 py-3">Monto Sugerido</th>
+                                <th class="px-4 py-3">Estatus</th>
+                            </tr>
+                        </thead>
+                        <tbody id="amortization-body">
+                            <!-- JS will populate this -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    const totalCuotas = {{ loan.cuotas_totales or 1 }
+                };
+                const frecuencia = "{{ loan.frecuencia_pagos }}";
+                const montoTotal = {{ (loan.monto_original if loan.monto_original else loan.monto_principal * loan.tasa_bcv_snapshot) }};
+                const moneda = "{{ loan.moneda }}";
+                const startDate = new Date("{{ loan.fecha_inicio }}");
+
+                const body = document.getElementById('amortization-body');
+                const montoCuota = montoTotal / totalCuotas;
+
+                const freqDays = {
+                    "diario": 1,
+                    "semanal": 7,
+                    "quincenal": 15,
+                    "mensual": 30
+                };
+                const daysPerPeriod = freqDays[frecuencia] || 30;
+
+                for (let i = 1; i <= totalCuotas; i++) {
+                    const dueDate = new Date(startDate);
+                    dueDate.setDate(startDate.getDate() + (i * daysPerPeriod));
+
+                    const row = document.createElement('tr');
+                    row.className = "border-b border-slate-50 dark:border-slate-800/50 last:border-0";
+
+                    const isPast = dueDate < new Date();
+
+                    row.innerHTML = `
+                            <td class="px-4 py-4 font-black text-slate-400">${i}</td>
+                            <td class="px-4 py-4 font-bold text-slate-600 dark:text-slate-300">${dueDate.toLocaleDateString('es-ES')}</td>
+                            <td class="px-4 py-4 font-black text-primary">${moneda === 'USD' ? '$' : 'Bs.'} ${montoCuota.toLocaleString('es-ES', { minimumFractionDigits: 2 })}</td>
+                            <td class="px-4 py-4">
+                                <span class="px-2 py-1 rounded-lg text-[10px] font-black uppercase ${isPast ? 'bg-red-500/10 text-red-500' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}">
+                                    ${isPast ? 'Pendiente / Vencida' : 'Próxima'}
+                                </span>
+                            </td>
+                        `;
+                    body.appendChild(row);
+                }
+                });
+            </script>
+
             <div>
                 <h4 class="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-4 px-2">Historial de
                     Transacciones</h4>
@@ -191,12 +260,21 @@
                                 </p>
                             </div>
                         </div>
-                        <div class="text-right">
-                            <p
-                                class="text-sm font-black {% if t.tipo == 'pago_cuota' %}text-emerald-500{% else %}text-slate-400{% endif %}">
-                                {% if t.tipo == 'pago_cuota' %}+{% else %}-{% endif %} {{ "$" if t.moneda == "USD" else
-                                "Bs." }} {{ t.monto_real|format_currency }}
-                            </p>
+                        <div class="flex items-center gap-4">
+                            <div class="text-right">
+                                <p
+                                    class="text-sm font-black {% if t.tipo == 'pago_cuota' %}text-emerald-500{% else %}text-slate-400{% endif %}">
+                                    {% if t.tipo == 'pago_cuota' %}+{% else %}-{% endif %} {{ "$" if t.moneda == "USD"
+                                    else
+                                    "Bs." }} {{ t.monto_real|format_currency }}
+                                </p>
+                            </div>
+                            {% if t.tipo == 'pago_cuota' %}
+                            <a href="/transactions/{{ t.id }}/receipt"
+                                class="size-8 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-primary transition-all">
+                                <span class="material-symbols-outlined text-sm">download</span>
+                            </a>
+                            {% endif %}
                         </div>
                     </div>
                     {% else %}
@@ -228,9 +306,9 @@
                 <p class="text-[10px] md:text-sm font-bold leading-normal tracking-tight">Préstamos</p>
             </a>
             <a class="flex flex-1 md:flex-row flex-col items-center justify-center gap-2 md:gap-3 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors md:hover:bg-primary/5 md:py-3 md:rounded-xl"
-                href="/settings/profile">
-                <span class="material-symbols-outlined">settings</span>
-                <p class="text-[10px] md:text-sm font-medium leading-normal tracking-tight">Ajustes</p>
+                href="/reports">
+                <span class="material-symbols-outlined">analytics</span>
+                <p class="text-[10px] md:text-sm font-medium leading-normal tracking-tight">Reportes</p>
             </a>
         </div>
     </div>

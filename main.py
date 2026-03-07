@@ -507,11 +507,14 @@ def client_detail(request: Request, client_id: int, db: Session = Depends(get_db
                 "deuda_pendiente": deuda
             })
             
+    total_deuda = sum(l['deuda_pendiente'] for l in active_loans)
+            
     unread_count = db.query(Notification).filter(Notification.user_id == current_user.id, Notification.leida == False).count()
     return templates.TemplateResponse("detalle-cliente.html", {
         "request": request,
         "client": client,
         "active_loans": active_loans,
+        "total_deuda": total_deuda,
         "unread_count": unread_count
     })
 
@@ -1028,8 +1031,8 @@ def analytics_report(db: Session = Depends(get_db), current_user: User = Depends
         })
     
     total_stats = {
-        "usd": f"{current_user.capital_total_usd:,.2f}",
-        "ves": f"{current_user.capital_total_ves:,.2f}",
+        "usd": f"{current_user.capital_total_usd + sum(utils.obtener_deuda_pendiente(l) for l in loans):,.2f}",
+        "ves": f"{(current_user.capital_total_usd + sum(utils.obtener_deuda_pendiente(l) for l in loans)) * update_bcv_rate_if_needed(db):,.2f}",
         "active_count": len(loans)
     }
     
@@ -1043,4 +1046,33 @@ def analytics_report(db: Session = Depends(get_db), current_user: User = Depends
         content=pdf_bytes,
         media_type="application/pdf",
         headers={"Content-Disposition": f"attachment; filename=Reporte_Melo_{datetime.now().strftime('%Y%m%d')}.pdf"}
+    )
+@app.get("/transactions/{transaction_id}/receipt")
+def get_transaction_receipt(transaction_id: int, db: Session = Depends(get_db), current_user: User = Depends(require_user)):
+    """Genera y descarga el recibo PDF de una transacción."""
+    trans = db.query(Transaction).join(Loan).join(Client).filter(
+        Transaction.id == transaction_id, 
+        Client.user_id == current_user.id
+    ).first()
+    
+    if not trans:
+        raise HTTPException(status_code=404, detail="Transacción no encontrada")
+    
+    # Calcular saldo pendiente al momento/post pago (aproximado)
+    saldo = utils.obtener_deuda_pendiente(trans.loan, tasa_actual=trans.loan.tasa_bcv_snapshot)
+    
+    receipt_data = {
+        "fecha": trans.fecha.strftime("%d/%m/%Y %H:%M"),
+        "cliente": trans.loan.client.nombre,
+        "monto": f"{'$' if trans.moneda == 'USD' else 'Bs.'} {format_currency(trans.monto_real)}",
+        "metodo": f"Pago a Préstamo #{trans.loan.id}",
+        "saldo": f"{'$' if trans.loan.moneda == 'USD' else 'Bs.'} {format_currency(saldo)}"
+    }
+    
+    pdf_bytes = analytics_engine.generate_payment_receipt(receipt_data)
+    
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=Recibo_Melo_{transaction_id}.pdf"}
     )

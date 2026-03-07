@@ -63,7 +63,8 @@
         <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
             <h2 class="text-xl font-black text-primary italic">Melo <span
                     class="text-slate-900 dark:text-white not-italic">Finance</span></h2>
-            <span class="bg-primary text-white text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-tighter">BETA</span>
+            <span
+                class="bg-primary text-white text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-tighter">BETA</span>
             <button onclick="toggleSidebar()" class="text-slate-400 hover:text-slate-900 dark:hover:text-white">
                 <span class="material-symbols-outlined">close</span>
             </button>
@@ -192,6 +193,28 @@
                 </a>
             </div>
 
+
+            <!-- Search & Filter -->
+            <div class="space-y-4">
+                <div class="relative group">
+                    <span
+                        class="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-400 group-focus-within:text-primary transition-colors">search</span>
+                    <input id="loanSearch" type="text" placeholder="Buscar por cliente..." onkeyup="filterLoans()"
+                        class="w-full h-12 pl-12 pr-4 bg-slate-100 dark:bg-slate-800 border-none rounded-2xl focus:ring-2 focus:ring-primary/20 transition-all font-medium">
+                </div>
+                <div class="flex gap-2 pb-2 overflow-x-auto scroller-hidden">
+                    <button onclick="setLoanFilter('all')"
+                        class="loan-filter-pill px-4 py-2 rounded-full bg-primary text-white text-xs font-black uppercase tracking-widest whitespace-nowrap"
+                        data-filter="all">Todos</button>
+                    <button onclick="setLoanFilter('vencidos')"
+                        class="loan-filter-pill px-4 py-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 text-xs font-black uppercase tracking-widest whitespace-nowrap"
+                        data-filter="vencidos">Vencidos</button>
+                    <button onclick="setLoanFilter('al-dia')"
+                        class="loan-filter-pill px-4 py-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 text-xs font-black uppercase tracking-widest whitespace-nowrap"
+                        data-filter="al-dia">Al día</button>
+                </div>
+            </div>
+
             <!-- List of Active Loans (As Assets) -->
             <div class="space-y-4">
                 <div class="flex items-center justify-between px-2">
@@ -204,8 +227,8 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {% for l in loans %}
-                    <div
-                        class="group relative bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm hover:border-primary/50 transition-all hover:shadow-xl hover:shadow-primary/5">
+                    <div class="loan-asset-card group relative bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm hover:border-primary/50 transition-all hover:shadow-xl hover:shadow-primary/5"
+                        data-client="{{ l.cliente }}" data-vencido="{{ 'true' if l.atraso else 'false' }}">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center gap-4">
                                 <div
@@ -357,6 +380,43 @@
                     input.value = (currentLoan.deuda / tasa_bcv).toFixed(2);
                 }
             }
+            let currentLoanFilter = 'all';
+
+            function setLoanFilter(filter) {
+                currentLoanFilter = filter;
+                document.querySelectorAll('.loan-filter-pill').forEach(btn => {
+                    if (btn.dataset.filter === filter) {
+                        btn.classList.add('bg-primary', 'text-white');
+                        btn.classList.remove('bg-slate-100', 'dark:bg-slate-800', 'text-slate-500');
+                    } else {
+                        btn.classList.remove('bg-primary', 'text-white');
+                        btn.classList.add('bg-slate-100', 'dark:bg-slate-800', 'text-slate-500');
+                    }
+                });
+                filterLoans();
+            }
+
+            function filterLoans() {
+                const query = document.getElementById('loanSearch').value.toLowerCase();
+                const loanCards = document.querySelectorAll('.loan-asset-card');
+
+                loanCards.forEach(card => {
+                    const clientName = card.dataset.client.toLowerCase();
+                    const isVencido = card.dataset.vencido === 'true';
+
+                    const matchesQuery = clientName.includes(query);
+                    let matchesFilter = true;
+
+                    if (currentLoanFilter === 'vencidos') matchesFilter = isVencido;
+                    if (currentLoanFilter === 'al-dia') matchesFilter = !isVencido;
+
+                    if (matchesQuery && matchesFilter) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            }
         </script>
 
         <div class="h-28"></div>
@@ -384,11 +444,6 @@
                 href="/reports">
                 <span class="material-symbols-outlined">analytics</span>
                 <p class="text-[10px] md:text-sm font-medium leading-normal tracking-tight">Reportes</p>
-            </a>
-            <a class="flex flex-1 md:flex-row flex-col items-center justify-center gap-2 md:gap-3 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors md:hover:bg-primary/5 md:py-3 md:rounded-xl"
-                href="/settings/profile">
-                <span class="material-symbols-outlined">settings</span>
-                <p class="text-[10px] md:text-sm font-medium leading-normal tracking-tight">Ajustes</p>
             </a>
         </div>
     </div>

@@ -94,3 +94,52 @@ def generate_loan_report(user_name, loans_data, total_stats):
         pdf.cell(30, 8, loan['vencimiento'], 1, 1, 'C')
 
     return pdf.output()
+
+def generate_payment_receipt(receipt_data):
+    """Genera un recibo de pago en formato ticket (profesional)."""
+    # Usamos un tamaño de página personalizado tipo ticket (80mm ancho)
+    pdf = FPDF(format=(80, 150))
+    pdf.add_page()
+    
+    # Header
+    pdf.set_font('helvetica', 'B', 12)
+    pdf.set_text_color(4, 61, 174)
+    pdf.cell(0, 8, 'Melo Finance', 0, 1, 'C')
+    pdf.set_font('helvetica', '', 7)
+    pdf.set_text_color(100)
+    pdf.cell(0, 4, 'COMPROBANTE DE PAGO', 0, 1, 'C')
+    pdf.ln(5)
+    
+    # Body
+    pdf.set_font('helvetica', 'B', 8)
+    pdf.set_text_color(30)
+    pdf.cell(20, 5, 'Fecha:', 0, 0)
+    pdf.set_font('helvetica', '', 8)
+    pdf.cell(0, 5, receipt_data['fecha'], 0, 1)
+    
+    pdf.set_font('helvetica', 'B', 8)
+    pdf.cell(20, 5, 'Cliente:', 0, 0)
+    pdf.set_font('helvetica', '', 8)
+    pdf.cell(0, 5, receipt_data['cliente'], 0, 1)
+    
+    pdf.ln(2)
+    pdf.set_draw_color(200)
+    pdf.line(10, pdf.get_y(), 70, pdf.get_y())
+    pdf.ln(2)
+    
+    pdf.set_font('helvetica', 'B', 10)
+    pdf.cell(0, 8, f"MONTO: {receipt_data['monto']}", 0, 1, 'C')
+    pdf.set_font('helvetica', 'I', 7)
+    pdf.cell(0, 4, f"Metodo: {receipt_data['metodo']}", 0, 1, 'C')
+    
+    pdf.ln(5)
+    pdf.set_fill_color(245)
+    pdf.set_font('helvetica', 'B', 8)
+    pdf.cell(0, 8, f"SALDO PENDIENTE: {receipt_data['saldo']}", 0, 1, 'C', True)
+    
+    pdf.ln(10)
+    pdf.set_font('helvetica', 'I', 6)
+    pdf.set_text_color(150)
+    pdf.multi_cell(0, 3, 'Gracias por su puntualidad. Este documento es un comprobante digital generado por Melo Finance.', 0, 'C')
+    
+    return pdf.output()

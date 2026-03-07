@@ -3,12 +3,14 @@
 
 <head>
     <meta charset="utf-8" />
-    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport" />
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Melo Finance">
     <meta name="theme-color" content="#043dae">
-    <meta name="description" content="Dashboard de Reportes y Analíticas - Melo Finance">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <link rel="manifest" href="/static/manifest.json">
+    <link rel="apple-touch-icon" href="/static/icon.png">
     <title>Melo Finance - Reportes y Analíticas</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
@@ -181,7 +183,8 @@
         <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
             <h2 class="text-xl font-black text-primary italic">Melo <span
                     class="text-slate-900 dark:text-white not-italic">Finance</span></h2>
-            <span class="bg-primary text-white text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-tighter">BETA</span>
+            <span
+                class="bg-primary text-white text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-tighter">BETA</span>
             <button onclick="toggleSidebar()" class="text-slate-400 hover:text-slate-900 dark:hover:text-white">
                 <span class="material-symbols-outlined">close</span>
             </button>
@@ -306,9 +309,10 @@
                 </div>
                 <div>
                     <p class="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-1">En Calle</p>
-                    <p class="text-2xl font-black text-slate-900 dark:text-white">${{
+                    <p class="text-xl font-black text-slate-900 dark:text-white">${{
                         capital_prestado_usd|format_currency }}</p>
-                    <p class="text-[11px] font-medium text-slate-400 mt-1">Total USD</p>
+                    <p class="text-[10px] font-bold text-slate-400">Bs. {{ (capital_prestado_usd *
+                        tasa_actual)|format_currency }}</p>
                 </div>
             </div>
 
@@ -320,9 +324,9 @@
                 </div>
                 <div>
                     <p class="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-1">Cobrado</p>
-                    <p class="text-2xl font-black text-slate-900 dark:text-white">${{ "%.2f"|format(ganancias_reales) }}
-                    </p>
-                    <p class="text-[11px] font-bold text-emerald-500 mt-1">Intereses</p>
+                    <p class="text-xl font-black text-emerald-500">${{ "%.2f"|format(ganancias_reales) }}</p>
+                    <p class="text-[10px] font-bold text-emerald-500/60">Bs. {{ "%.2f"|format(ganancias_reales *
+                        tasa_actual) }}</p>
                 </div>
             </div>
 
@@ -334,9 +338,9 @@
                 </div>
                 <div>
                     <p class="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-1">Ticket Prom.</p>
-                    <p class="text-2xl font-black text-slate-900 dark:text-white">${{ promedio_prestamo|format_currency
-                        }}</p>
-                    <p class="text-[11px] font-medium text-slate-400 mt-1">Por préstamo</p>
+                    <p class="text-xl font-black text-purple-500">${{ promedio_prestamo|format_currency }}</p>
+                    <p class="text-[10px] font-bold text-purple-500/60">Bs. {{ (promedio_prestamo *
+                        tasa_actual)|format_currency }}</p>
                 </div>
             </div>
 
@@ -348,9 +352,9 @@
                 </div>
                 <div>
                     <p class="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-1">Recaudado</p>
-                    <p class="text-2xl font-black text-slate-900 dark:text-white">${{ recaudacion_total|format_currency
-                        }}</p>
-                    <p class="text-[11px] font-medium text-slate-400 mt-1">Total Pagos</p>
+                    <p class="text-xl font-black text-blue-500">${{ recaudacion_total|format_currency }}</p>
+                    <p class="text-[10px] font-bold text-blue-500/60">Bs. {{ (recaudacion_total *
+                        tasa_actual)|format_currency }}</p>
                 </div>
             </div>
 
@@ -362,9 +366,9 @@
                 </div>
                 <div>
                     <p class="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-1">Proyectado</p>
-                    <p class="text-2xl font-black text-slate-900 dark:text-white">${{
-                        ganancias_proyectadas|format_currency }}</p>
-                    <p class="text-[11px] font-medium text-slate-400 mt-1">Por cobrar</p>
+                    <p class="text-xl font-black text-blue-500">${{ ganancias_proyectadas|format_currency }}</p>
+                    <p class="text-[10px] font-bold text-blue-500/60">Bs. {{ (ganancias_proyectadas *
+                        tasa_actual)|format_currency }}</p>
                 </div>
             </div>
         </div>
