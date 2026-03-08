@@ -32,6 +32,7 @@ from webauthn.helpers.structs import (
     UserVerificationRequirement,
     AuthenticatorAttachment,
     ResidentKeyRequirement,
+    PublicKeyCredentialDescriptor,
 )
 from pywebpush import webpush, WebPushException
 
@@ -232,7 +233,8 @@ def webauthn_login_options(username: str, db: Session = Depends(get_db)):
     options = generate_authentication_options(
         rp_id=RP_ID,
         allow_credentials=[
-            {"id": bytes.fromhex(c.credential_id), "type": "public-key"} for c in user.credentials
+            PublicKeyCredentialDescriptor(id=bytes.fromhex(c.credential_id), type="public-key")
+            for c in user.credentials
         ],
         user_verification=UserVerificationRequirement.PREFERRED,
     )
@@ -259,11 +261,12 @@ async def webauthn_login_verify(request: Request, db: Session = Depends(get_db))
 
     try:
         options_json = json.loads(signer.loads(options_cookie))
-        # Buscar la credencial usada
-        cred_id_hex = data["id"] # El ID que viene en el JSON de respuesta
-        # Convertir cred_id del response (base64url) a hex para buscarlo
-        # (El frontend usualmente envía el ID en formato base64url o crudo dependiendo de la lib)
-        # Nota: La librería webauthn de python maneja la conversión si le pasamos el objeto correcto.
+        # El credential_id en el response viene en base64url format
+        cred_id_raw = data["rawId"]  # base64url string
+        # Decodificar de base64url a bytes y luego a hex para buscar en DB
+        import base64
+        cred_id_bytes = base64.urlsafe_b64decode(cred_id_raw + "==")
+        cred_id_hex = cred_id_bytes.hex()
         
         db_cred = db.query(WebAuthnCredential).filter(WebAuthnCredential.credential_id == cred_id_hex).first()
         if not db_cred:
@@ -352,10 +355,6 @@ def push_test(db: Session = Depends(get_db), current_user: User = Depends(requir
     db.commit()
     return {"status": "ok", "sent": sent_count, "deleted_expired": expired_count}
 
-def require_user(current_user: User = Depends(get_current_user)):
-    if not current_user:
-        raise HTTPException(status_code=status.HTTP_303_SEE_OTHER, headers={"Location": "/login"})
-    return current_user
 
 @app.get("/", response_class=RedirectResponse)
 def index():
@@ -474,20 +473,22 @@ def dashboard(request: Request, db: Session = Depends(get_db), current_user: Use
     prestamos_vencidos = sum(1 for l in active_loans if utils.chequear_cuota_vencida(l))
     total_prestamos_activos = len(active_loans)
     
-    # Capital Prestado (Suma de deudas pendientes en USD por defecto)
-    capital_prestado_usd = sum(utils.obtener_deuda_pendiente(l) for l in active_loans)
+    # Capital Prestado (Solo el capital principal que aún no fue recuperado)
+    capital_prestado_usd = sum(max(0.0, l.monto_principal - sum(t.monto for t in l.transactions if t.tipo == 'pago_cuota')) for l in active_loans)
 
-    # Ganancias proyectadas = interes sumado de préstamos activos (estimado sobre el capital prestado)
+    # Ganancias proyectadas = interes sumado de préstamos activos
     ganancias_proyectadas = sum(
         utils.calcular_interes_simple(l.monto_principal, l.porcentaje_interes) * (l.cuotas_totales or 1)
         for l in active_loans
     )
     
-    # Ganancias reales = solo ingresos extra de este usuario
-    ganancias_reales = db.query(func.sum(Transaction.monto)).join(Loan).join(Client).filter(
-        Client.user_id == user.id,
-        Transaction.tipo == 'ingreso_extra'
-    ).scalar() or 0
+    # Ganancias reales = Interés recolectado (Total pagado - Principal cubierto)
+    ganancias_reales = 0.0
+    all_user_loans = db.query(Loan).join(Client).filter(Client.user_id == user.id).all()
+    for l in all_user_loans:
+        pagos_usd = sum(t.monto for t in l.transactions if t.tipo == 'pago_cuota')
+        if pagos_usd > l.monto_principal:
+            ganancias_reales += (pagos_usd - l.monto_principal)
     
     # Notificaciones no leídas
     unread_count = db.query(Notification).filter(Notification.user_id == user.id, Notification.leida == False).count()
@@ -502,17 +503,22 @@ def dashboard(request: Request, db: Session = Depends(get_db), current_user: Use
     meses_nombres = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"]
     hoy = datetime.utcnow()
     
+    current_month = datetime(hoy.year, hoy.month, 1)
+    
     for i in range(6, -1, -1):
-        target_date = hoy - timedelta(days=i*30)
-        mes_label = meses_nombres[target_date.month - 1]
+        # Calcular mjes retrospectivo con seguridad para enero/febrero
+        target_m = current_month.month - i - 1
+        target_y = current_month.year + (target_m // 12)
+        target_m = (target_m % 12) + 1
+        
+        mes_label = meses_nombres[target_m - 1]
         meses_labels.append(mes_label)
         
-        # Inicio y fin de mes
-        start = datetime(target_date.year, target_date.month, 1)
-        if target_date.month == 12:
-            end = datetime(target_date.year + 1, 1, 1)
+        start = datetime(target_y, target_m, 1)
+        if target_m == 12:
+            end = datetime(target_y + 1, 1, 1)
         else:
-            end = datetime(target_date.year, target_date.month + 1, 1)
+            end = datetime(target_y, target_m + 1, 1)
             
         sum_mes = db.query(func.sum(Transaction.monto)).join(Loan).join(Client).filter(
             Client.user_id == user.id,
@@ -584,7 +590,7 @@ def movements_history_view(request: Request, db: Session = Depends(get_db), curr
 @app.get("/history/loans", response_class=HTMLResponse)
 def loans_history_view(request: Request, db: Session = Depends(get_db), current_user: User = Depends(require_user)):
     tasa_actual = update_bcv_rate_if_needed(db)
-    loans = db.query(Loan).join(Client).filter(Client.user_id == current_user.id).order_by(Loan.fecha_creacion.desc()).all()
+    loans = db.query(Loan).options(joinedload(Loan.transactions), joinedload(Loan.client)).join(Client).filter(Client.user_id == current_user.id).order_by(Loan.fecha_creacion.desc()).all()
     
     # Adaptar para multimoneda indexada
     formatted_loans = []
@@ -609,7 +615,7 @@ def loans_history_view(request: Request, db: Session = Depends(get_db), current_
 
 @app.get("/clients", response_class=HTMLResponse)
 def clients_list(request: Request, db: Session = Depends(get_db), current_user: User = Depends(require_user)):
-    clients = db.query(Client).filter(Client.user_id == current_user.id).all()
+    clients = db.query(Client).options(joinedload(Client.loans).joinedload(Loan.transactions)).filter(Client.user_id == current_user.id).all()
     client_data = []
     for c in clients:
         deuda = sum(utils.obtener_deuda_pendiente(l) for l in c.loans if l.estatus == 'activo')
@@ -625,7 +631,7 @@ def clients_list(request: Request, db: Session = Depends(get_db), current_user: 
 @app.get("/loans", response_class=HTMLResponse)
 def loans_hub(request: Request, db: Session = Depends(get_db), current_user: User = Depends(require_user)):
     tasa_actual = update_bcv_rate_if_needed(db)
-    active_loans = db.query(Loan).join(Client).filter(Client.user_id == current_user.id, Loan.estatus == 'activo').all()
+    active_loans = db.query(Loan).options(joinedload(Loan.transactions), joinedload(Loan.client)).join(Client).filter(Client.user_id == current_user.id, Loan.estatus == 'activo').all()
     
     # Stats
     total_prestado = sum(utils.obtener_deuda_pendiente(l) for l in active_loans)
@@ -713,7 +719,7 @@ def clients_post(client: schemas.ClientCreate, db: Session = Depends(get_db), cu
 
 @app.get("/clients/{client_id}", response_class=HTMLResponse)
 def client_detail(request: Request, client_id: int, db: Session = Depends(get_db), current_user: User = Depends(require_user)):
-    client = db.query(Client).filter(Client.id == client_id, Client.user_id == current_user.id).first()
+    client = db.query(Client).options(joinedload(Client.loans).joinedload(Loan.transactions)).filter(Client.id == client_id, Client.user_id == current_user.id).first()
     if not client:
         raise HTTPException(status_code=404, detail="Cliente no encontrado")
     
@@ -1007,22 +1013,24 @@ def cancel_loan(
     if not loan or loan.estatus != 'activo':
         raise HTTPException(status_code=404, detail="Préstamo no encontrado o ya no está activo")
     
-    # Devolver el capital pendiente al usuario
-    deuda = utils.obtener_deuda_pendiente(loan)
+    # Devolver el capital pendiente real (Principal original - Pagos realizados a principal)
+    pagos_usd = sum(t.monto for t in loan.transactions if t.tipo == 'pago_cuota')
+    capital_por_recuperar = max(0.0, loan.monto_principal - pagos_usd)
+    
     if loan.moneda == "USD":
-        db.query(User).filter(User.id == current_user.id).update({User.capital_total_usd: User.capital_total_usd + deuda})
+        db.query(User).filter(User.id == current_user.id).update({User.capital_total_usd: User.capital_total_usd + capital_por_recuperar})
     else:
         tasa = update_bcv_rate_if_needed(db)
-        db.query(User).filter(User.id == current_user.id).update({User.capital_total_ves: User.capital_total_ves + (deuda * tasa)})
+        db.query(User).filter(User.id == current_user.id).update({User.capital_total_ves: User.capital_total_ves + (capital_por_recuperar * tasa)})
     
     loan.estatus = 'anulado'
     
-    # Registrar devolución de capital
+    # Registrar devolución de capital (Anulación)
     reintegro_trans = Transaction(
         loan_id=loan.id,
-        tipo='ingreso_extra',
-        monto=deuda if loan.moneda == "USD" else deuda, # deuda ya está en base-USD si el helper así lo hace
-        monto_real=deuda if loan.moneda == "USD" else (deuda * update_bcv_rate_if_needed(db)),
+        tipo='ingreso_extra',  # Ahora es legítimo para auditoría de anulaciones
+        monto=capital_por_recuperar,
+        monto_real=capital_por_recuperar if loan.moneda == "USD" else (capital_por_recuperar * update_bcv_rate_if_needed(db)),
         moneda=loan.moneda
     )
     db.add(reintegro_trans)
@@ -1057,6 +1065,10 @@ def register_payment(
     loan = db.query(Loan).join(Client).filter(Loan.id == loan_id, Client.user_id == current_user.id).first()
     if not loan:
         raise HTTPException(status_code=404, detail="Préstamo no encontrado")
+        
+    if monto <= 0:
+        # Retornar error amistoso en la UI en vez de 400 seco (prevenir robo de capital por saldo negativo)
+        return RedirectResponse(url="/loans", status_code=status.HTTP_303_SEE_OTHER)
     
     # Nueva Lógica de Indexación (VES -> USD interno)
     tasa = tasa_pago or update_bcv_rate_if_needed(db)
@@ -1155,21 +1167,23 @@ def reports_dashboard(request: Request, db: Session = Depends(get_db), current_u
     user = current_user
     tasa_actual = update_bcv_rate_if_needed(db)
 
-    active_loans = db.query(Loan).options(joinedload(Loan.transactions)).join(Client).filter(Client.user_id == user.id, Loan.estatus == 'activo').all()
+    active_loans = db.query(Loan).options(joinedload(Loan.transactions), joinedload(Loan.client)).join(Client).filter(Client.user_id == current_user.id, Loan.estatus == 'activo').all()
 
     prestamos_vencidos = sum(1 for l in active_loans if utils.chequear_cuota_vencida(l))
     total_activos = len(active_loans)
-    capital_prestado_usd = sum(utils.obtener_deuda_pendiente(l) for l in active_loans)
+    capital_prestado_usd = sum(max(0.0, l.monto_principal - sum(t.monto for t in l.transactions if t.tipo == 'pago_cuota')) for l in active_loans)
 
     ganancias_proyectadas = sum(
         utils.calcular_interes_simple(l.monto_principal, l.porcentaje_interes) * (l.cuotas_totales or 1)
         for l in active_loans
     )
 
-    ganancias_reales = db.query(func.sum(Transaction.monto)).join(Loan).join(Client).filter(
-        Client.user_id == user.id,
-        Transaction.tipo == 'ingreso_extra'
-    ).scalar() or 0
+    ganancias_reales = 0.0
+    all_user_loans = db.query(Loan).join(Client).filter(Client.user_id == user.id).all()
+    for l in all_user_loans:
+        pagos_usd = sum(t.monto for t in l.transactions if t.tipo == 'pago_cuota')
+        if pagos_usd > l.monto_principal:
+            ganancias_reales += (pagos_usd - l.monto_principal)
 
     unread_count = db.query(Notification).filter(Notification.user_id == user.id, Notification.leida == False).count()
 
@@ -1182,15 +1196,20 @@ def reports_dashboard(request: Request, db: Session = Depends(get_db), current_u
     meses_nombres = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"]
     hoy = datetime.utcnow()
 
+    current_month = datetime(hoy.year, hoy.month, 1)
+
     for i in range(6, -1, -1):
-        target_date = hoy - timedelta(days=i * 30)
-        mes_label = meses_nombres[target_date.month - 1]
+        target_m = current_month.month - i - 1
+        target_y = current_month.year + (target_m // 12)
+        target_m = (target_m % 12) + 1
+        
+        mes_label = meses_nombres[target_m - 1]
         meses_labels.append(mes_label)
-        start = datetime(target_date.year, target_date.month, 1)
-        if target_date.month == 12:
-            end = datetime(target_date.year + 1, 1, 1)
+        start = datetime(target_y, target_m, 1)
+        if target_m == 12:
+            end = datetime(target_y + 1, 1, 1)
         else:
-            end = datetime(target_date.year, target_date.month + 1, 1)
+            end = datetime(target_y, target_m + 1, 1)
         sum_mes = db.query(func.sum(Transaction.monto)).join(Loan).join(Client).filter(
             Client.user_id == user.id,
             Transaction.tipo == 'pago_cuota',
