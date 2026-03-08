@@ -555,7 +555,6 @@ def movements_history_view(request: Request, db: Session = Depends(get_db), curr
     cap_trans = db.query(CapitalTransaction).filter(CapitalTransaction.user_id == current_user.id).all()
     
     # Formatear para una vista unificada
-    movements = []
     for t in loan_trans:
         titulo = f"Pago: {t.loan.client.nombre}"
         tipo_mov = "entrada"
@@ -569,16 +568,18 @@ def movements_history_view(request: Request, db: Session = Depends(get_db), curr
         movements.append({
             "fecha": t.fecha,
             "titulo": titulo,
-            "monto": t.monto,
+            "monto": t.monto_real if getattr(t, 'monto_real', None) else t.monto,
+            "moneda": t.moneda,
             "tipo_ui": tipo_mov,
             "categoria": "Préstamo"
         })
     for t in cap_trans:
         movements.append({
             "fecha": t.fecha,
-            "titulo": f"Ajuste de Capital ({t.moneda})",
+            "titulo": f"Ajuste de Capital",
             "monto": t.monto,
-            "tipo_ui": "entrada" if t.tipo == "inversion" else "salida",
+            "moneda": t.moneda,
+            "tipo_ui": "entrada" if t.tipo in ["inversion", "ajuste_directo"] else "salida",
             "categoria": "Capital"
         })
         
@@ -746,7 +747,8 @@ def client_detail(request: Request, client_id: int, db: Session = Depends(get_db
         "client": client,
         "active_loans": active_loans,
         "total_deuda": total_deuda,
-        "unread_count": unread_count
+        "unread_count": unread_count,
+        "format_currency": format_currency # Fix reference to local func
     })
 
 @app.get("/loans/new", response_class=HTMLResponse)
@@ -970,8 +972,12 @@ def capital_settings_post(
                 db.add(ct)
                 user.capital_total_ves = capital_ves
         
+        # Generar notificación silenciosa (Audit trail)
+        if ajuste_usd != 0 or ajuste_ves != 0 or capital_usd is not None or capital_ves is not None:
+            crear_alerta(db, user.id, "Capital Actualizado", "Tus ajustes de capital han sido guardados.", "success")
+            
         db.commit()
-    return RedirectResponse(url="/settings/profile?saved=1", status_code=status.HTTP_303_SEE_OTHER)
+    return RedirectResponse(url="/dashboard", status_code=status.HTTP_303_SEE_OTHER)
 
 @app.get("/settings/profile", response_class=HTMLResponse)
 def profile_settings_get(request: Request, db: Session = Depends(get_db), current_user: User = Depends(require_user)):
@@ -987,16 +993,14 @@ def profile_settings_get(request: Request, db: Session = Depends(get_db), curren
 
 @app.post("/settings/profile")
 def profile_settings_post(
-    username: str = Form(...),
     nombre: str = Form(""),
     apellido: str = Form(""),
     password: str = Form(""),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_user)
 ):
-    current_user.username = username
-    current_user.nombre = nombre
-    current_user.apellido = apellido
+    current_user.nombre = nombre.strip()
+    current_user.apellido = apellido.strip()
     if password:
         current_user.hashed_password = hash_password(password)
     db.commit()
@@ -1265,64 +1269,4 @@ def reports_dashboard(request: Request, db: Session = Depends(get_db), current_u
         "ves_count": ves_count
     })
 
-@app.get("/analytics/report")
-def analytics_report(db: Session = Depends(get_db), current_user: User = Depends(require_user)):
-    """Genera un reporte PDF de la cartera actual."""
-    loans = db.query(Loan).join(Client).filter(Client.user_id == current_user.id, Loan.estatus == 'activo').all()
-    
-    loans_data = []
-    for l in loans:
-        loans_data.append({
-            "cliente": l.client.nombre,
-            "monto": f"{l.monto_original:,.2f}",
-            "moneda": l.moneda,
-            "estatus": l.estatus.capitalize(),
-            "vencimiento": l.fecha_vencimiento.strftime("%d/%m/%Y") if l.fecha_vencimiento else "N/A"
-        })
-    
-    total_stats = {
-        "usd": f"{current_user.capital_total_usd + sum(utils.obtener_deuda_pendiente(l) for l in loans):,.2f}",
-        "ves": f"{(current_user.capital_total_usd + sum(utils.obtener_deuda_pendiente(l) for l in loans)) * update_bcv_rate_if_needed(db):,.2f}",
-        "active_count": len(loans)
-    }
-    
-    pdf_bytes = analytics_engine.generate_loan_report(
-        f"{current_user.nombre} {current_user.apellido}",
-        loans_data,
-        total_stats
-    )
-    
-    return Response(
-        content=pdf_bytes,
-        media_type="application/pdf",
-        headers={"Content-Disposition": f"attachment; filename=Reporte_Melo_{datetime.now().strftime('%Y%m%d')}.pdf"}
-    )
-@app.get("/transactions/{transaction_id}/receipt")
-def get_transaction_receipt(transaction_id: int, db: Session = Depends(get_db), current_user: User = Depends(require_user)):
-    """Genera y descarga el recibo PDF de una transacción."""
-    trans = db.query(Transaction).join(Loan).join(Client).filter(
-        Transaction.id == transaction_id, 
-        Client.user_id == current_user.id
-    ).first()
-    
-    if not trans:
-        raise HTTPException(status_code=404, detail="Transacción no encontrada")
-    
-    # Calcular saldo pendiente al momento/post pago (aproximado)
-    saldo = utils.obtener_deuda_pendiente(trans.loan, tasa_actual=trans.loan.tasa_bcv_snapshot)
-    
-    receipt_data = {
-        "fecha": trans.fecha.strftime("%d/%m/%Y %H:%M"),
-        "cliente": trans.loan.client.nombre,
-        "monto": f"{'$' if trans.moneda == 'USD' else 'Bs.'} {format_currency(trans.monto_real)}",
-        "metodo": f"Pago a Préstamo #{trans.loan.id}",
-        "saldo": f"{'$' if trans.loan.moneda == 'USD' else 'Bs.'} {format_currency(saldo)}"
-    }
-    
-    pdf_bytes = analytics_engine.generate_payment_receipt(receipt_data)
-    
-    return Response(
-        content=pdf_bytes,
-        media_type="application/pdf",
-        headers={"Content-Disposition": f"attachment; filename=Recibo_Melo_{transaction_id}.pdf"}
-    )
+

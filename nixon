@@ -1,0 +1,13 @@
+El formulario de registro debe ser profesional, las claves deben tener reglas, y tambien confirmar la clave.
+
+Otra cosa, luego de registrarse, e ingresar los montos de los dos capitales, debe saltarnos a la pagna del dashboard, ya que al ingresar, el usuario debe ver solamente el dashboard, no su perfil.
+
+La vista de detalles de los clientes, no funciona, antes si funcionaba y ahora no, reparalo.
+
+La exportacion de PDF no funciona, entonces elimina esas funciones, deja que solamente el usuario pueda ver sus metricas a traves del dashboard de reportes, si es necesario mostrar algo mas agregalo a ese dashboard.
+
+El actualizar perfil no funciona, no me permite cambiar nada del perfil.
+
+No llegan notificaciones de que se cambio el capital, y el historial se ve mal.
+
+En el repositorio hay demasiado codigo desordenado, necesito que se vea limpio, y la ingenieria de software se respete al maximo, es OBLIGATORIO.
